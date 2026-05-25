@@ -5,362 +5,279 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Agenda Médica — Registro</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f7f6f2;
+    --bg: #f4f7f4;
     --surface: #ffffff;
-    --border: #e0ddd5;
-    --border-strong: #c8c4bc;
+    --border: #dee2e6;
+    --border-green: #d1e7dd;
     --text: #1a1917;
-    --text-muted: #6b6860;
-    --text-hint: #9e9b94;
-    --accent: #1a1917;
+    --text-muted: #555c63;
+    --text-hint: #6c757d;
+    --accent: #198754;
+    --accent-dark: #146c43;
     --accent-fg: #ffffff;
-    --success-bg: #eaf3de;
-    --success-text: #3b6d11;
     --radius: 10px;
     --radius-sm: 6px;
+    --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   }
 
-  body {
-    font-family: 'Georgia', serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 2rem 1rem 4rem;
+  /* Reset & Base */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    line-height: 1.5;
+    padding: 3rem 1rem;
   }
 
-  .page-header {
-    max-width: 740px;
-    margin: 0 auto 2.5rem;
-  }
+  .container { max-width: 800px; margin: 0 auto; }
 
-  .page-header h1 {
-    font-size: 28px;
-    font-weight: normal;
-    letter-spacing: -0.02em;
-    color: var(--text);
-    margin-bottom: 6px;
+  /* Typography */
+  h1 { 
+    font-family: 'Georgia', serif; 
+    color: var(--accent-dark); 
+    font-size: 2rem; 
+    text-align: center;
+    margin-bottom: 0.5rem;
   }
-
-  .page-header p {
-    font-size: 14px;
+  .hint-text { 
+    text-align: center; 
+    font-family: 'Courier New', monospace; 
+    font-size: 14px; 
     color: var(--text-muted);
-    font-family: 'Courier New', monospace;
+    margin-bottom: 3rem;
   }
 
-  .card {
+  /* Cards */
+  .card { 
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    max-width: 740px;
-    margin: 0 auto 1.5rem;
+    border: 1px solid var(--border-green); 
+    border-radius: var(--radius); 
+    border-top: 5px solid var(--accent); 
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
   }
 
   .section-label {
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
+    font-family: 'Courier New', monospace; 
+    font-size: 11px; 
     letter-spacing: 0.1em;
-    text-transform: uppercase;
+    text-transform: uppercase; 
     color: var(--text-hint);
-    margin-bottom: 1.25rem;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem; 
+    padding-bottom: 8px; 
+    border-bottom: 1px solid var(--border-green);
   }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .col-full { grid-column: 1 / -1; }
+  /* Responsive Grid (Sin Bootstrap) */
+  .row { display: grid; gap: 1rem; grid-template-columns: repeat(12, 1fr); }
+  .col-6 { grid-column: span 6; }
+  .col-4 { grid-column: span 4; }
+  @media (max-width: 600px) {
+    .col-6, .col-4 { grid-column: span 12; }
+  }
 
-  .field { display: flex; flex-direction: column; gap: 5px; }
-
-  .field label {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-family: 'Courier New', monospace;
+  /* Forms */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .form-label {
+    font-family: 'Courier New', monospace; font-size: 12px; 
+    color: var(--accent-dark); font-weight: bold;
     letter-spacing: 0.02em;
   }
 
-  .field input,
-  .field select {
+  .form-control, .form-select {
     width: 100%;
-    padding: 9px 12px;
+    padding: 0.5rem 0.75rem;
+    font-size: 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
     outline: none;
-    transition: border-color 0.15s;
-    appearance: none;
-    -webkit-appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
   }
 
-  .field input:focus,
-  .field select:focus { border-color: var(--border-strong); }
-
-  .field input[type="time"] { font-family: 'Courier New', monospace; }
-  .field input[type="number"] { font-family: 'Courier New', monospace; }
-
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6860' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    padding-right: 30px;
-  }
-
-  .time-group {
-    display: grid;
-    grid-template-columns: 1fr 20px 1fr;
-    align-items: end;
-    gap: 6px;
-  }
-
-  .time-sep {
-    text-align: center;
-    color: var(--text-hint);
-    font-size: 14px;
-    padding-bottom: 10px;
-  }
-
-  .days-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .time-group { display: flex; align-items: center; gap: 8px; }
+  .time-sep { color: var(--text-hint); font-weight: bold; }
+  .days-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 
   .day-label {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text);
-    background: var(--surface);
-    transition: background 0.12s, border-color 0.12s;
-    user-select: none;
+    display: flex; align-items: center; gap: 7px; padding: 7px 14px;
+    border: 1px solid var(--border-green); border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 13px; color: var(--text); background: white;
+    transition: all 0.12s; user-select: none;
     font-family: 'Courier New', monospace;
   }
-
-  .day-label:hover { background: var(--bg); border-color: var(--border-strong); }
-
+  .day-label:hover { background: var(--bg); border-color: var(--accent); }
   .day-label input[type="checkbox"] {
-    width: 14px; height: 14px;
-    accent-color: var(--accent);
-    cursor: pointer;
-    flex-shrink: 0;
+    width: 14px; height: 14px; accent-color: var(--accent);
   }
 
-  .actions {
-    max-width: 740px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 0 0.25rem;
-  }
-
+  /* Buttons */
+  .btn-group { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
   .btn {
-    padding: 10px 22px;
+    padding: 0.6rem 1.5rem;
     border-radius: var(--radius-sm);
     font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    font-family: 'Courier New', monospace;
-    transition: opacity 0.12s, transform 0.1s;
-    border: 1px solid var(--border-strong);
-    background: transparent;
-    color: var(--text-muted);
-  }
-
-  .btn:hover { opacity: 0.75; }
-  .btn:active { transform: scale(0.98); }
-
-  .btn-primary {
-    background: var(--accent);
-    color: var(--accent-fg);
-    border-color: var(--accent);
-    display: flex;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
   }
+  .btn-outline { border-color: var(--text-hint); background: transparent; color: var(--text-muted); }
+  .btn-outline:hover { background: #eee; }
+  .btn-success { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-success:hover { background: var(--accent-dark); }
 
-  .btn-primary svg { flex-shrink: 0; }
-
-  .toast {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--success-bg);
-    color: var(--success-text);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-family: 'Courier New', monospace;
-    border: 1px solid #c0dd97;
-  }
-
-  .toast.visible { display: flex; }
-
-  @media (max-width: 580px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .col-full { grid-column: 1; }
+  /* Toast (Custom) */
+  .toast-container {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #198754; color: white; padding: 12px 24px; border-radius: 50px;
+    display: none; align-items: center; gap: 10px; font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999;
   }
 </style>
 </head>
 <body>
 
-<header class="page-header">
+<div class="container">
   <h1>Registro de agenda médica</h1>
-  <p>Captura · Valida · Exporta CSV</p>
-</header>
+  <p class="hint-text">Captura · Valida · Exporta CSV</p>
 
-<!-- UNIDAD MÉDICA -->
-<div class="card">
-  <p class="section-label">01 — Unidad médica</p>
-  <div class="grid-2">
-    <div class="field">
-      <label for="clues">CLUES</label>
-      <input id="clues" type="text" placeholder="Clave CLUES" />
-    </div>
-    <div class="field">
-      <label for="unidad">Nombre unidad médica</label>
-      <input id="unidad" type="text" placeholder="Nombre oficial" />
-    </div>
-    <div class="field">
-      <label for="especialidad">Especialidad</label>
-      <input id="especialidad" type="text" placeholder="Ej. Medicina General" />
-    </div>
-    <div class="field">
-      <label for="consultorio">Nombre consultorio</label>
-      <input id="consultorio" type="text" placeholder="Ej. Consultorio 3" />
-    </div>
-  </div>
-</div>
-
-<!-- EMPLEADO -->
-<div class="card">
-  <p class="section-label">02 — Empleado</p>
-  <div class="grid-3">
-    <div class="field">
-      <label for="turno">Turno</label>
-      <select id="turno">
-        <option value="">Seleccionar...</option>
-        <option>Matutino</option>
-        <option>Vespertino</option>
-        <option>Nocturno</option>
-        <option>Jornada acumulada</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="clave_emp">Clave empleado</label>
-      <input id="clave_emp" type="text" placeholder="Número de empleado" />
-    </div>
-    <div class="field">
-      <label for="nombre">Nombre(s)</label>
-      <input id="nombre" type="text" placeholder="Nombre(s)" />
-    </div>
-    <div class="field">
-      <label for="apellido_p">Apellido paterno</label>
-      <input id="apellido_p" type="text" placeholder="Apellido paterno" />
-    </div>
-    <div class="field">
-      <label for="apellido_m">Apellido materno</label>
-      <input id="apellido_m" type="text" placeholder="Apellido materno" />
-    </div>
-    <div class="field">
-      <label for="titular">Titular</label>
-      <select id="titular">
-        <option value="">Seleccionar...</option>
-        <option>Sí</option>
-        <option>No</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<!-- HORARIO DE ATENCIÓN -->
-<div class="card">
-  <p class="section-label">03a — Horario de atención</p>
-  <div class="field">
-    <label>Hora inicio — Hora fin</label>
-    <div class="time-group" style="max-width: 320px;">
-      <input id="h_inicio_atencion" type="time" />
-      <span class="time-sep">–</span>
-      <input id="h_fin_atencion" type="time" />
-    </div>
-  </div>
-</div>
-
-<!-- CITAS -->
-<div class="card">
-  <p class="section-label">03b — Citas</p>
-  <div class="grid-2" style="margin-bottom: 18px;">
-    <div class="field">
-      <label>Hora inicio cita — Hora fin cita</label>
-      <div class="time-group">
-        <input id="h_inicio_cita" type="time" />
-        <span class="time-sep">–</span>
-        <input id="h_fin_cita" type="time" />
+  <!-- UNIDAD MÉDICA -->
+  <div class="card">
+    <p class="section-label">01 — Unidad médica</p>
+    <div class="row">
+      <div class="col-6 field">
+        <label class="form-label" for="clues">CLUES</label>
+        <input id="clues" type="text" class="form-control" placeholder="Clave CLUES" />
+      </div>
+      <div class="col-6 field">
+        <label class="form-label" for="unidad">Nombre unidad médica</label>
+        <input id="unidad" type="text" class="form-control" placeholder="Nombre oficial" />
+      </div>
+      <div class="col-6 field">
+        <label class="form-label" for="especialidad">Especialidad</label>
+        <input id="especialidad" type="text" class="form-control" placeholder="Ej. Medicina General" />
+      </div>
+      <div class="col-6 field">
+        <label class="form-label" for="consultorio">Nombre consultorio</label>
+        <input id="consultorio" type="text" class="form-control" placeholder="Ej. Consultorio 3" />
       </div>
     </div>
-    <div class="field">
-      <label for="intervalo">Intervalo de consulta (minutos)</label>
-      <input id="intervalo" type="number" min="5" max="120" step="5" placeholder="Ej. 20" />
+  </div>
+
+  <!-- EMPLEADO -->
+  <div class="card">
+    <p class="section-label">02 — Empleado</p>
+    <div class="row">
+      <div class="col-4 field">
+        <label class="form-label" for="turno">Turno</label>
+        <select id="turno" class="form-select">
+          <option value="">Seleccionar...</option>
+          <option>Matutino</option>
+          <option>Vespertino</option>
+          <option>Nocturno</option>
+          <option>Jornada acumulada</option>
+        </select>
+      </div>
+      <div class="col-4 field">
+        <label class="form-label" for="clave_emp">Clave empleado</label>
+        <input id="clave_emp" type="text" class="form-control" placeholder="Número" />
+      </div>
+      <div class="col-4 field">
+        <label class="form-label" for="titular">Titular</label>
+        <select id="titular" class="form-select">
+          <option value="">Seleccionar...</option>
+          <option>Sí</option>
+          <option>No</option>
+        </select>
+      </div>
+      <div class="col-4 field">
+        <label class="form-label" for="nombre">Nombre(s)</label>
+        <input id="nombre" type="text" class="form-control" />
+      </div>
+      <div class="col-4 field">
+        <label class="form-label" for="apellido_p">Apellido paterno</label>
+        <input id="apellido_p" type="text" class="form-control" />
+      </div>
+      <div class="col-4 field">
+        <label class="form-label" for="apellido_m">Apellido materno</label>
+        <input id="apellido_m" type="text" class="form-control" />
+      </div>
     </div>
   </div>
 
-  <div class="field">
-    <label>Ocasión de servicio</label>
-    <div class="ocasion-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:2px;">
-      <label class="day-label" id="lbl_primera">
-        <input type="checkbox" id="ocasion_primera" onchange="validarOcasion()" /> Primera vez
-      </label>
-      <label class="day-label" id="lbl_subsecuente">
-        <input type="checkbox" id="ocasion_subsecuente" onchange="validarOcasion()" /> Subsecuente
-      </label>
+  <!-- HORARIOS -->
+  <div class="card">
+    <p class="section-label">03 — Horarios y Citas</p>
+    <div class="row">
+      <div class="col-6 field">
+        <label class="form-label">Atención</label>
+        <div class="time-group">
+          <input id="h_inicio_atencion" type="time" class="form-control" />
+          <span class="time-sep">–</span>
+          <input id="h_fin_atencion" type="time" class="form-control" />
+        </div>
+      </div>
+      <div class="col-6 field">
+        <label class="form-label">Citas</label>
+        <div class="time-group">
+          <input id="h_inicio_cita" type="time" class="form-control" />
+          <span class="time-sep">–</span>
+          <input id="h_fin_cita" type="time" class="form-control" />
+        </div>
+      </div>
+      <div class="col-6 field">
+        <label class="form-label" for="intervalo">Intervalo (min)</label>
+        <input id="intervalo" type="number" class="form-control" placeholder="Ej. 20" />
+      </div>
+      <div class="col-6 field">
+        <label class="form-label">Ocasión</label>
+        <div class="days-grid">
+          <label class="day-label" id="lbl_primera"><input type="checkbox" id="ocasion_primera" onchange="validarOcasion()" /> 1ra Vez</label>
+          <label class="day-label" id="lbl_subsecuente"><input type="checkbox" id="ocasion_subsecuente" onchange="validarOcasion()" /> Subseq.</label>
+        </div>
+        <p id="msg_ocasion" style="display:none; color:red; font-size:11px; font-weight:bold; margin-top:5px;">Req. Primera vez</p>
+      </div>
     </div>
-    <p id="msg_ocasion" style="font-size:12px; color:#a32d2d; font-family:'Courier New',monospace; margin-top:6px; display:none;">
-      Subsecuente requiere que también se seleccione Primera vez.
-    </p>
   </div>
-</div>
 
-<!-- DÍAS -->
-<div class="card">
-  <p class="section-label">04 — Días de atención</p>
-  <div class="days-grid">
-    <label class="day-label"><input type="checkbox" id="lunes" /> Lunes</label>
-    <label class="day-label"><input type="checkbox" id="martes" /> Martes</label>
-    <label class="day-label"><input type="checkbox" id="miercoles" /> Miércoles</label>
-    <label class="day-label"><input type="checkbox" id="jueves" /> Jueves</label>
-    <label class="day-label"><input type="checkbox" id="viernes" /> Viernes</label>
-    <label class="day-label"><input type="checkbox" id="sabado" /> Sábado</label>
-    <label class="day-label"><input type="checkbox" id="domingo" /> Domingo</label>
+  <!-- DÍAS -->
+  <div class="card">
+    <p class="section-label">04 — Días de atención</p>
+    <div class="days-grid">
+      <label class="day-label"><input type="checkbox" id="lunes" /> Lun</label>
+      <label class="day-label"><input type="checkbox" id="martes" /> Mar</label>
+      <label class="day-label"><input type="checkbox" id="miercoles" /> Mié</label>
+      <label class="day-label"><input type="checkbox" id="jueves" /> Jue</label>
+      <label class="day-label"><input type="checkbox" id="viernes" /> Vie</label>
+      <label class="day-label"><input type="checkbox" id="sabado" /> Sáb</label>
+      <label class="day-label"><input type="checkbox" id="domingo" /> Dom</label>
+    </div>
   </div>
-</div>
 
-<!-- ACCIONES -->
-<div class="actions">
-  <span class="toast" id="toast">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#3b6d11" stroke-width="1.5"/><path d="M4.5 7l2 2 3-3" stroke="#3b6d11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Archivo CSV descargado
-  </span>
-  <div style="display:flex; gap:10px; margin-left:auto;">
-    <button class="btn" onclick="limpiarFormulario()">Limpiar</button>
-    <button class="btn btn-primary" onclick="descargarCSV()">
+  <div class="btn-group">
+    <button class="btn btn-outline" onclick="limpiarFormulario()">Limpiar</button>
+    <button class="btn btn-success" onclick="descargarCSV()">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-        <path d="M7.5 1v9M4 7l3.5 3.5L11 7M2 12h11" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7.5 1v9M4 7l3.5 3.5L11 7M2 12h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Descargar CSV
     </button>
   </div>
+</div>
+
+<div id="toast" class="toast-container">
+  <svg width="18" height="18" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.5"/><path d="M4.5 7l2 2 3-3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Archivo descargado correctamente</span>
 </div>
 
 <script>
@@ -391,7 +308,7 @@
     const lbl = document.getElementById('lbl_subsecuente');
     if (subsecuente && !primera) {
       msg.style.display = 'block';
-      lbl.style.borderColor = '#e24b4a';
+      lbl.style.borderColor = '#dc3545';
       document.getElementById('ocasion_subsecuente').checked = false;
     } else {
       msg.style.display = 'none';
@@ -475,8 +392,8 @@
     URL.revokeObjectURL(url);
 
     const toast = document.getElementById('toast');
-    toast.classList.add('visible');
-    setTimeout(() => toast.classList.remove('visible'), 3000);
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
   }
 
   function limpiarFormulario() {
