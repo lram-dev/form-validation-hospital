@@ -8,6 +8,7 @@
 <style>
   :root {
     --bs-primary: #0d6efd;
+    --bs-primary-hover: #0a58ca;
     --bs-secondary: #6c757d;
     --bs-border-color: #dee2e6;
     --bs-body-bg: #f8f9fa;
@@ -15,7 +16,7 @@
   }
 
   body {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bs-body-bg);
     padding: 2rem 0;
     color: #212529;
@@ -97,6 +98,14 @@
   .col-6 { grid-column: span 6; }
   @media(max-width: 768px) { .col-3, .col-6 { grid-column: span 12; } }
 
+  @media(min-width: 769px) {
+    .admin-layout .col-3 {
+      grid-column: span 6;
+    }
+  }
+
+  h1 { text-align: center; color: var(--bs-primary); margin-bottom: 2rem; font-weight: 700; }
+
   .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #495057; }
 
   .form-control, .form-select {
@@ -139,24 +148,29 @@
     float: none;
     width: auto;
     padding: 0 0.5rem;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--bs-primary);
   }
 
-  .form-check { margin-bottom: 1rem; }
+  .form-check { margin-bottom: 1.5rem; }
   .form-check-label { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .form-check-input { width: 1.1em; height: 1.1em; cursor: pointer; }
-  .text-muted { font-size: 0.85rem; color: #6c757d; display: block; margin-left: 1.8rem; margin-top: 2px; }
+  .text-muted { font-size: 0.85rem; color: #6c757d; display: block; margin-left: 1.8rem; margin-top: -0.25rem; }
 
   .view { display: none; }
   .view.active { display: block; }
+
+  .w-100 { width: 100%; }
+  .mt-4 { margin-top: 1.5rem; }
 </style>
 
 </head>
 <body>
 
 <div class="container">
+
+<h1>Formulario de precarga MoCE</h1>
 
 <div class="app-header">
   <div class="nav-capsule">
@@ -173,22 +187,35 @@
 <!-- HOSPITAL -->
 <div id="hospital" class="view active">
 <div class="card">
+  <div class="mb-4 p-3 border rounded bg-light-blue">
+    <label class="form-label">Cargar Catálogo de Hospitales (Excel)</label>
+    <input type="file" id="excel-input" class="form-control" accept=".xlsx, .xls" onchange="procesarExcel(event)">
+    <p class="text-muted mt-2 mb-0">Columnas requeridas: A:CLUES, B:ENTIDAD, C:Municipio, D:Nombre de Unidad</p>
+  </div>
   <div class="row">
     <div class="col-6">
       <label class="form-label">Entidad Federativa</label>
-      <input id="entidad" class="form-control" placeholder="Entidad">
-    </div>
-    <div class="col-6">
-      <label class="form-label">CVE_PRESUPUESTAL</label>
-      <input id="cve" class="form-control" placeholder="CVE">
-    </div>
-    <div class="col-6">
-      <label class="form-label">CLUES</label>
-      <input id="clues" class="form-control" placeholder="CLUES">
+      <select id="entidad" class="form-select" onchange="actualizarUnidades()">
+        <option value="">Seleccione Entidad...</option>
+      </select>
     </div>
     <div class="col-6">
       <label class="form-label">Nombre Unidad Médica</label>
-      <input id="unidad" class="form-control" placeholder="Unidad">
+      <select id="unidad" class="form-select" onchange="autoCompletarHospital()">
+        <option value="">Seleccione Unidad...</option>
+      </select>
+    </div>
+    <div class="col-6">
+      <label class="form-label">Municipio</label>
+      <input id="municipio" class="form-control" placeholder="Autocompletado" readonly>
+    </div>
+    <div class="col-6">
+      <label class="form-label">CLUES</label>
+      <input id="clues" class="form-control" placeholder="Autocompletado" readonly>
+    </div>
+    <div class="col-6">
+      <label class="form-label">CVE_PRESUPUESTAL</label>
+      <input id="cve" class="form-control" placeholder="Autocompletado" readonly>
     </div>
   </div>
 </div>
@@ -277,8 +304,8 @@
   </fieldset>
 </div>
 
-<button id="btn-save-op" class="btn btn-primary" onclick="guardar()">Guardar Personal Operativo</button>
-<button id="btn-save-admin" class="btn btn-primary" style="display:none;" onclick="guardar()">Guardar Personal Administrativo</button>
+<button id="btn-save-op" class="btn btn-primary mt-4" onclick="guardar()">Guardar Personal Operativo</button>
+<button id="btn-save-admin" class="btn btn-primary mt-4" style="display:none;" onclick="guardar()">Guardar Personal Administrativo</button>
 
 </div>
 
@@ -288,6 +315,84 @@
 
 let registros=[];
 let tipo="operativo";
+
+// --- BASE DE DATOS DE HOSPITALES ---
+// IMPORTANTE: Reemplaza estos ejemplos con los datos de tu Excel.
+// Estructura: A: clues, B: entidad, C: municipio, D: nombre, E: cve (si existe)
+const HOSPITAL_DATA = [
+  { entidad: "HIDALGO", municipio: "PACHUCA DE SOTO", nombre: "HOSPITAL GENERAL PACHUCA", clues: "HGPACH001", cve: "CVE-HGO-01" },
+  { entidad: "HIDALGO", municipio: "TULANCINGO DE BRAVO", nombre: "CENTRO DE SALUD TULANCINGO", clues: "CSTUL002", cve: "CVE-HGO-02" },
+  // PEGA AQUÍ EL RESTO DE TUS FILAS SIGUIENDO ESTE FORMATO
+];
+
+window.onload = function() {
+  const entidadesUnicas = [...new Set(HOSPITAL_DATA.map(h => h.entidad))];
+  const selectEntidad = document.getElementById("entidad");
+  entidadesUnicas.sort().forEach(ent => {
+    let opt = new Option(ent, ent);
+    selectEntidad.add(opt);
+  });
+};
+
+function actualizarUnidades() {
+  const entSel = document.getElementById("entidad").value;
+  const selectUnidad = document.getElementById("unidad");
+  const selectClues = document.getElementById("clues");
+  const inputCve = document.getElementById("cve");
+  
+  selectUnidad.innerHTML = '<option value="">Seleccione Unidad...</option>';
+  selectClues.innerHTML = '<option value="">Seleccione CLUES...</option>';
+  inputCve.value = "Autocompletado";
+
+  if (!entSel) return;
+
+  const unidadesUnicas = [...new Set(HOSPITAL_DATA.filter(h => h.entidad === entSel).map(h => h.nombre))];
+  unidadesUnicas.sort().forEach(un => {
+    let opt = new Option(un, un);
+    selectUnidad.add(opt);
+  });
+}
+
+function actualizarClues() {
+  const entSel = document.getElementById("entidad").value;
+  const munSel = document.getElementById("municipio").value;
+  const unSel = document.getElementById("unidad").value;
+  const selectClues = document.getElementById("clues");
+  const inputCve = document.getElementById("cve");
+
+  selectClues.innerHTML = '<option value="">Seleccione CLUES...</option>';
+  inputCve.value = "Autocompletado";
+
+  if (!unSel) return;
+
+  const cluesFiltradas = HOSPITAL_DATA.filter(h => h.entidad === entSel && h.municipio === munSel && h.nombre === unSel);
+  cluesFiltradas.forEach(h => {
+    let opt = new Option(h.clues, h.clues);
+    selectClues.add(opt);
+  });
+
+  // Si solo hay una CLUES para esa unidad, la seleccionamos automáticamente
+  if (cluesFiltradas.length === 1) {
+    selectClues.selectedIndex = 1;
+    actualizarCVE();
+  }
+}
+
+function actualizarCVE() {
+  const entSel = document.getElementById("entidad").value;
+  const munSel = document.getElementById("municipio").value;
+  const unSel = document.getElementById("unidad").value;
+  const cluesSel = document.getElementById("clues").value;
+  const inputCve = document.getElementById("cve");
+
+  if (!cluesSel) {
+    inputCve.value = "Autocompletado";
+    return;
+  }
+
+  const registro = HOSPITAL_DATA.find(h => h.entidad === entSel && h.municipio === munSel && h.nombre === unSel && h.clues === cluesSel);
+  inputCve.value = registro ? registro.cve : "";
+}
 
 function switchView(v){
 
@@ -306,6 +411,10 @@ document.getElementById("registro").classList.add("active");
 document.querySelectorAll('.tab-btn')[v==="operativo"?1:2].classList.add('active');
 
 let isOp=(v==="operativo");
+let row = document.querySelector("#registro .row");
+
+if(isOp) row.classList.remove("admin-layout");
+else row.classList.add("admin-layout");
 
 document.getElementById("field-clave").style.display=isOp?"block":"none";
 document.getElementById("field-titular").style.display=isOp?"block":"none";
@@ -347,8 +456,9 @@ return;
 
 registros.push([
 get("entidad"),
-get("cve"),
-get("clues"),
+document.getElementById("municipio").value,
+document.getElementById("cve").value,
+document.getElementById("clues").value,
 get("unidad"),
 get("clave"),
 get("nombre"),
@@ -379,7 +489,7 @@ function limpiarCampos() {
 
 function descargar(){
 if(registros.length===0){ alert("No hay datos"); return; }
-const headers=["Entidad Federativa","CVE_PRESUPUESTAL","CLUES","Nombre Unidad Medica","Clave Empleado","Nombre","Apellido","2do Apellido","CURP","Titular","Asistente medica","Administrador de catalogo","Director","Jefe de servicios","Agenda de citas"];
+const headers=["Entidad Federativa","Municipio","CVE_PRESUPUESTAL","CLUES","Nombre Unidad Medica","Clave Empleado","Nombre","Apellido","2do Apellido","CURP","Titular","Asistente medica","Administrador de catalogo","Director","Jefe de servicios","Agenda de citas"];
 
 let csv=headers.join(",")+"\n"+registros.map(r=>r.join(",")).join("\n");
 
