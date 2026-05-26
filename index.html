@@ -1,505 +1,5103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda Médica</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agenda Médica</title>
 
-<style>
-  :root {
-    --bs-primary: #0d6efd;
-    --bs-primary-hover: #0a58ca;
-    --bs-secondary: #6c757d;
-    --bs-border-color: #dee2e6;
-    --bs-body-bg: #f8f9fa;
-    --bs-card-bg: #ffffff;
-  }
+    <style>
+      :root {
+        --bs-primary: #0d6efd;
+        --bs-primary-hover: #0a58ca;
+        --bs-secondary: #6c757d;
+        --bs-border-color: #dee2e6;
+        --bs-body-bg: #f8f9fa;
+        --bs-card-bg: #ffffff;
+      }
 
-  body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--bs-body-bg);
-    padding: 2rem 0;
-    color: #212529;
-  }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        background-color: var(--bs-body-bg);
+        padding: 2rem 0;
+        color: #212529;
+      }
 
-  .container { max-width: 900px; margin: auto; padding: 0 15px; }
+      .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 0 15px;
+      }
 
-  .app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    background: #fff;
-    padding: 10px 20px;
-    border-radius: 50px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        background: #fff;
+        padding: 10px 20px;
+        border-radius: 50px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        flex-wrap: wrap;
+        gap: 10px;
+      }
 
-  @media(max-width: 768px) {
-    .app-header {
-      flex-direction: column;
-      border-radius: 20px;
-      padding: 15px;
-    }
-    .nav-capsule {
-      width: 100%;
-      justify-content: center;
-    }
-    .btn-secondary {
-      width: 100%;
-    }
-  }
+      @media (max-width: 768px) {
+        .app-header {
+          flex-direction: column;
+          border-radius: 20px;
+          padding: 15px;
+        }
+        .nav-capsule {
+          width: 100%;
+          justify-content: center;
+        }
+        .btn-secondary {
+          width: 100%;
+        }
+      }
 
-  .nav-capsule {
-    display: inline-flex;
-    background-color: #e9ecef;
-    border-radius: 50px;
-    padding: 4px;
-  }
+      .nav-capsule {
+        display: inline-flex;
+        background-color: #e9ecef;
+        border-radius: 50px;
+        padding: 4px;
+      }
 
-  .tab-btn {
-    border: none;
-    padding: 8px 20px;
-    border-radius: 50px;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    color: var(--bs-secondary);
-    background: transparent;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+      .tab-btn {
+        border: none;
+        padding: 8px 20px;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: var(--bs-secondary);
+        background: transparent;
+        cursor: pointer;
+        white-space: nowrap;
+      }
 
-  @media(max-width: 576px) {
-    .tab-btn {
-      padding: 8px 12px;
-      font-size: 0.8rem;
-    }
-  }
+      @media (max-width: 576px) {
+        .tab-btn {
+          padding: 8px 12px;
+          font-size: 0.8rem;
+        }
+      }
 
-  .tab-btn.active {
-    background-color: var(--bs-primary);
-    color: white;
-    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
-  }
+      .tab-btn.active {
+        background-color: var(--bs-primary);
+        color: white;
+        box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+      }
 
-  .card {
-    background: var(--bs-card-bg);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    border-radius: 0.375rem;
-    border: 1px solid var(--bs-border-color);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  }
+      .card {
+        background: var(--bs-card-bg);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--bs-border-color);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      }
 
-  .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; }
-  .col-3 { grid-column: span 3; }
-  .col-6 { grid-column: span 6; }
-  @media(max-width: 768px) { .col-3, .col-6 { grid-column: span 12; } }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+      }
+      .col-3 {
+        grid-column: span 3;
+      }
+      .col-6 {
+        grid-column: span 6;
+      }
+      @media (max-width: 768px) {
+        .col-3,
+        .col-6 {
+          grid-column: span 12;
+        }
+      }
 
-  @media(min-width: 769px) {
-    .admin-layout .col-3 {
-      grid-column: span 6;
-    }
-  }
+      @media (min-width: 769px) {
+        .admin-layout .col-3 {
+          grid-column: span 6;
+        }
+      }
 
-  h1 { text-align: center; color: var(--bs-primary); margin-bottom: 2rem; font-weight: 700; }
+      h1 {
+        text-align: center;
+        color: var(--bs-primary);
+        margin-bottom: 2rem;
+        font-weight: 700;
+      }
 
-  .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #495057; }
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #495057;
+      }
 
-  .form-control, .form-select {
-    display: block;
-    width: 100%;
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    box-sizing: border-box;
-  }
+      .form-control,
+      .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition:
+          border-color 0.15s ease-in-out,
+          box-shadow 0.15s ease-in-out;
+        box-sizing: border-box;
+      }
 
-  .form-control:focus {
-    border-color: #86b7fe;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .15);
-  }
+      .form-control:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+      }
 
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer;
-    padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid transparent; transition: all .15s;
-  }
-  .btn-primary { color: #fff; background-color: var(--bs-primary); border-color: var(--bs-primary); width: 100%; margin-top: 1rem; }
-  .btn-primary:hover { opacity: 0.9; }
-  .btn-secondary { color: #fff; background-color: var(--bs-secondary); border-radius: 50px; font-size: 0.9rem; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        border: 1px solid transparent;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        color: #fff;
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        width: 100%;
+        margin-top: 1rem;
+      }
+      .btn-primary:hover {
+        opacity: 0.9;
+      }
+      .btn-secondary {
+        color: #fff;
+        background-color: var(--bs-secondary);
+        border-radius: 50px;
+        font-size: 0.9rem;
+      }
 
-  fieldset {
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-  }
+      fieldset {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.375rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+      }
 
-  legend {
-    float: none;
-    width: auto;
-    padding: 0 0.5rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--bs-primary);
-  }
+      legend {
+        float: none;
+        width: auto;
+        padding: 0 0.5rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--bs-primary);
+      }
 
-  .form-check { margin-bottom: 1.5rem; }
-  .form-check-label { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .form-check-input { width: 1.1em; height: 1.1em; cursor: pointer; }
-  .text-muted { font-size: 0.85rem; color: #6c757d; display: block; margin-left: 1.8rem; margin-top: -0.25rem; }
+      .form-check {
+        margin-bottom: 1.5rem;
+      }
+      .form-check-label {
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .form-check-input {
+        width: 1.1em;
+        height: 1.1em;
+        cursor: pointer;
+      }
+      .text-muted {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: block;
+        margin-left: 1.8rem;
+        margin-top: -0.25rem;
+      }
 
-  .view { display: none; }
-  .view.active { display: block; }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
 
-  .w-100 { width: 100%; }
-  .mt-4 { margin-top: 1.5rem; }
-</style>
+      .w-100 {
+        width: 100%;
+      }
+      .mt-4 {
+        margin-top: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Formulario de precarga MoCE</h1>
 
-</head>
-<body>
+      <div class="app-header">
+        <div class="nav-capsule">
+          <button class="tab-btn active" onclick="switchView('hospital')">
+            Hospital
+          </button>
+          <button class="tab-btn" onclick="switchView('operativo')">
+            Operativo
+          </button>
+          <button class="tab-btn" onclick="switchView('administrativo')">
+            Administrativo
+          </button>
+        </div>
+        <button class="btn btn-secondary" onclick="descargar()">
+          <svg
+            width="16"
+            height="16"
+            fill="currentColor"
+            style="margin-right: 8px"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"
+            />
+            <path
+              d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"
+            />
+          </svg>
+          Descargar CSV
+        </button>
+      </div>
 
-<div class="container">
+      <!-- HOSPITAL -->
+      <div id="hospital" class="view active">
+        <div class="card">
+          <div class="row">
+            <div class="col-6">
+              <label class="form-label">Entidad Federativa</label>
+              <select
+                id="entidad"
+                class="form-select"
+                onchange="actualizarUnidades()"
+              >
+                <option value="">Seleccione Entidad...</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Nombre Unidad Médica</label>
+              <select
+                id="unidad"
+                class="form-select"
+                onchange="autoCompletarHospital()"
+              >
+                <option value="">Seleccione Unidad...</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Municipio</label>
+              <input
+                id="municipio"
+                class="form-control"
+                placeholder="Autocompletado"
+                readonly
+              />
+            </div>
+            <div class="col-6">
+              <label class="form-label">CLUES</label>
+              <input
+                id="clues"
+                class="form-control"
+                placeholder="Autocompletado"
+                readonly
+              />
+            </div>
+            <div class="col-6">
+              <label class="form-label">CVE_PRESUPUESTAL</label>
+              <input
+                id="cve"
+                class="form-control"
+                placeholder="Escribe a mano"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-<h1>Formulario de precarga MoCE</h1>
+      <!-- REGISTRO -->
+      <div id="registro" class="view">
+        <div class="card">
+          <div class="row">
+            <div id="field-clave" class="col-3">
+              <label class="form-label">Clave Empleado</label>
+              <input id="clave" class="form-control" />
+            </div>
+            <div class="col-3">
+              <label id="lbl-nombre" class="form-label">NOMBRE</label>
+              <input id="nombre" class="form-control" />
+            </div>
+            <div class="col-3">
+              <label id="lbl-apellido" class="form-label"
+                >APELIDO PATERNO</label
+              >
+              <input id="apellido" class="form-control" />
+            </div>
+            <div class="col-3">
+              <label id="lbl-apellido2" class="form-label"
+                >APELLIDO MATERNO</label
+              >
+              <input id="apellido2" class="form-control" />
+            </div>
+            <div id="field-curp" class="col-3" style="display: none">
+              <label class="form-label">CURP</label>
+              <input
+                id="curp"
+                maxlength="18"
+                class="form-control"
+                placeholder="18 caracteres"
+              />
+            </div>
+            <div id="field-titular" class="col-3">
+              <label class="form-label">Titular</label>
+              <select id="titular" class="form-select">
+                <option value="">Seleccionar...</option>
+                <option>Sí</option>
+                <option>No</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-<div class="app-header">
-  <div class="nav-capsule">
-    <button class="tab-btn active" onclick="switchView('hospital')">Hospital</button>
-    <button class="tab-btn" onclick="switchView('operativo')">Operativo</button>
-    <button class="tab-btn" onclick="switchView('administrativo')">Administrativo</button>
-  </div>
-  <button class="btn btn-secondary" onclick="descargar()">
-    <svg width="16" height="16" fill="currentColor" style="margin-right: 8px;" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-    Descargar CSV
-  </button>
-</div>
+        <!-- ROLES COMPLETOS -->
+        <div id="roles" class="card" style="display: none">
+          <fieldset>
+            <legend>Roles y Atribuciones</legend>
 
-<!-- HOSPITAL -->
-<div id="hospital" class="view active">
-<div class="card">
-  <div class="mb-4 p-3 border rounded bg-light-blue">
-    <label class="form-label">Cargar Catálogo de Hospitales (Excel)</label>
-    <input type="file" id="excel-input" class="form-control" accept=".xlsx, .xls" onchange="procesarExcel(event)">
-    <p class="text-muted mt-2 mb-0">Columnas requeridas: A:CLUES, B:ENTIDAD, C:Municipio, D:Nombre de Unidad</p>
-  </div>
-  <div class="row">
-    <div class="col-6">
-      <label class="form-label">Entidad Federativa</label>
-      <select id="entidad" class="form-select" onchange="actualizarUnidades()">
-        <option value="">Seleccione Entidad...</option>
-      </select>
+            <div class="form-check">
+              <label class="form-check-label">
+                <input
+                  type="checkbox"
+                  id="role_asistente"
+                  class="form-check-input"
+                />
+                Asistente medica
+              </label>
+              <span class="text-muted"
+                >PERSONAL QUE AYUDE AL DOCTOR A REGISTRAR CITAS, CONSULTAS
+                ETC</span
+              >
+            </div>
+
+            <div class="form-check">
+              <label class="form-check-label">
+                <input
+                  type="checkbox"
+                  id="role_admin"
+                  class="form-check-input"
+                />
+                Administrador de catalogo
+              </label>
+              <span class="text-muted"
+                >QUIEN PODRÁ HACER MODIFICACIONES A ESTA PARTE DE CONSULTA
+                EXTERNA</span
+              >
+            </div>
+
+            <div class="form-check">
+              <label class="form-check-label">
+                <input
+                  type="checkbox"
+                  id="role_director"
+                  class="form-check-input"
+                />
+                Director
+              </label>
+              <span class="text-muted">LA DIRECTORA</span>
+            </div>
+
+            <div class="form-check">
+              <label class="form-check-label">
+                <input
+                  type="checkbox"
+                  id="role_jefe"
+                  class="form-check-input"
+                />
+                Jefes de servicios ( jefe de especialidad)
+              </label>
+              <span class="text-muted">EL TITULAR DE LA ESPECIALIDAD</span>
+            </div>
+
+            <div class="form-check">
+              <label class="form-check-label">
+                <input
+                  type="checkbox"
+                  id="role_agenda"
+                  class="form-check-input"
+                />
+                Agenda de citas
+              </label>
+              <span class="text-muted"
+                >PERSONAL QUE MANEJE LA AGENDA DE CITAS</span
+              >
+            </div>
+          </fieldset>
+        </div>
+
+        <button
+          id="btn-save-op"
+          class="btn btn-primary mt-4"
+          onclick="guardar()"
+        >
+          Guardar Personal Operativo
+        </button>
+        <button
+          id="btn-save-admin"
+          class="btn btn-primary mt-4"
+          style="display: none"
+          onclick="guardar()"
+        >
+          Guardar Personal Administrativo
+        </button>
+      </div>
     </div>
-    <div class="col-6">
-      <label class="form-label">Nombre Unidad Médica</label>
-      <select id="unidad" class="form-select" onchange="autoCompletarHospital()">
-        <option value="">Seleccione Unidad...</option>
-      </select>
-    </div>
-    <div class="col-6">
-      <label class="form-label">Municipio</label>
-      <input id="municipio" class="form-control" placeholder="Autocompletado" readonly>
-    </div>
-    <div class="col-6">
-      <label class="form-label">CLUES</label>
-      <input id="clues" class="form-control" placeholder="Autocompletado" readonly>
-    </div>
-    <div class="col-6">
-      <label class="form-label">CVE_PRESUPUESTAL</label>
-      <input id="cve" class="form-control" placeholder="Autocompletado" readonly>
-    </div>
-  </div>
-</div>
-</div>
 
-<!-- REGISTRO -->
-<div id="registro" class="view">
+    <script>
+      let registros = [];
+      let tipo = "operativo";
 
-<div class="card">
-  <div class="row">
-    <div id="field-clave" class="col-3">
-      <label class="form-label">Clave Empleado</label>
-      <input id="clave" class="form-control">
-    </div>
-    <div class="col-3">
-      <label id="lbl-nombre" class="form-label">NOMBRE</label>
-      <input id="nombre" class="form-control">
-    </div>
-    <div class="col-3">
-      <label id="lbl-apellido" class="form-label">APELIDO PATERNO</label>
-      <input id="apellido" class="form-control">
-    </div>
-    <div class="col-3">
-      <label id="lbl-apellido2" class="form-label">APELLIDO MATERNO</label>
-      <input id="apellido2" class="form-control">
-    </div>
-    <div id="field-curp" class="col-3" style="display:none;">
-      <label class="form-label">CURP</label>
-      <input id="curp" maxlength="18" class="form-control" placeholder="18 caracteres">
-    </div>
-    <div id="field-titular" class="col-3">
-      <label class="form-label">Titular</label>
-      <select id="titular" class="form-select">
-        <option value="">Seleccionar...</option>
-        <option>Sí</option>
-        <option>No</option>
-      </select>
-    </div>
-  </div>
-</div>
+      // --- BASE DE DATOS DE HOSPITALES ---
+      // Estructura: { entidad: string, municipio: string, nombre: string, clues: string }
+      // Datos embebidos (del listado proporcionado por ti).
+      const HOSPITAL_DATA = [
+        {
+          ID: 1,
+          CLUES: "OCIMB009643",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "IXTLAN DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "IXTLÁN DE JUÁREZ",
+        },
+        {
+          ID: 2,
+          CLUES: "SRIMB000016",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "GUAYMAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VICAM SWITCH",
+        },
+        {
+          ID: 3,
+          CLUES: "OCIMB007181",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "HEROICA CIUDAD DE JUCHITAN DE ZARAGOZA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL ESPECIALIZADO DE 30 CAMAS DE JUCHITAN",
+        },
+        {
+          ID: 4,
+          CLUES: "OCIMB009660",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN JUAN BAUTISTA TUXTEPEC",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE SAN JUAN BAUTISTA TUXTEPEC",
+        },
+        {
+          ID: 5,
+          CLUES: "OCIMB009631",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN BARTOLO COYOTEPEC",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE LA MUJER Y LA NIÑEZ OAXAQUEÑA",
+        },
+        {
+          ID: 6,
+          CLUES: "SRIMB002891",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL INTEGRAL DE LA MUJER DEL ESTADO DE SONORA",
+        },
+        {
+          ID: 7,
+          CLUES: "SRIMB000931",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO DE HIGIENE MENTAL DR. CARLOS NAVA MUÑOZ",
+        },
+        {
+          ID: 8,
+          CLUES: "TLIMB002165",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "APETATITLAN DE ANTONIO CARVAJAL",
+          "NOMBRE DE LA UNIDAD": "DETECCIÓN Y DIAGNÓSTICO DE CANCER DE MAMA",
+        },
+        {
+          ID: 9,
+          CLUES: "TSIMB003594",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD":
+            "UNIDAD MÉDICA ESPECIALIZADA PARA LA DETECCIÓN Y DIAGNÓSTICO DE CÁNCER DE MAMA",
+        },
+        {
+          ID: 10,
+          CLUES: "NTIMB001765",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "TEPIC",
+          "NOMBRE DE LA UNIDAD": "CENTRO ESTATAL DE CANCEROLOGÍA",
+        },
+        {
+          ID: 11,
+          CLUES: "TSIMB003582",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "NUEVO LAREDO",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO ONCOLÓGICO NUEVO LAREDO DR. RODOLFO TORRE CANTÚ",
+        },
+        {
+          ID: 12,
+          CLUES: "ZSIMB002225",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "GUADALUPE",
+          "NOMBRE DE LA UNIDAD": "UNEME DE ONCOLOGIA GUADALUPE",
+        },
+        {
+          ID: 13,
+          CLUES: "BCIMB001726",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "MEXICALI",
+          "NOMBRE DE LA UNIDAD": "UNEME DE ONCOLOGÍA",
+        },
+        {
+          ID: 14,
+          CLUES: "PLIMB004172",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD": "UNIDAD DE ONCOLOGÍA",
+        },
+        {
+          ID: 15,
+          CLUES: "TSIMB001926",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD": "CENTRO ONCOLÓGICO DE TAMAULIPAS",
+        },
+        {
+          ID: 16,
+          CLUES: "OCIMB000876",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "OAXACA DE JUAREZ",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO DE ONCOLOGÍA Y RADIOTERAPIA DE OAXACA, S.S.O.",
+        },
+        {
+          ID: 17,
+          CLUES: "SLIMB002971",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "INSTITUTO SINALOENSE DE CANCEROLOGÍA",
+        },
+        {
+          ID: 18,
+          CLUES: "BSIMB000766",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LA PAZ",
+          "NOMBRE DE LA UNIDAD":
+            'CENTRO ESTATAL DE ONCOLOGÍA "DR. RUBÉN CARDOZA MACÍAS" ',
+        },
+        {
+          ID: 19,
+          CLUES: "SRIMB000902",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO ESTATAL DE ONCOLOGÍA DR. ERNESTO RIVERA CLAISSE",
+        },
+        {
+          ID: 20,
+          CLUES: "CSIMB005891",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "OSTUACAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO OSTUACAN, CHIAPAS",
+        },
+        {
+          ID: 21,
+          CLUES: "CSIMB006113",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "OXCHUC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO DE OXCHUC",
+        },
+        {
+          ID: 22,
+          CLUES: "QRIMB001611",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "OTHON P. BLANCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS-BIENESTAR NICOLÁS BRAVO",
+        },
+        {
+          ID: 23,
+          CLUES: "DFIMB001694",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "XOCHIMILCO",
+          "NOMBRE DE LA UNIDAD":
+            "CLÍNICA HOSPITAL DE ESPECIALIDADES TOXICOLÓGICAS XOCHIMILCO",
+        },
+        {
+          ID: 24,
+          CLUES: "CSIMB001300",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "LAS MARGARITAS",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE LAS MARGARITAS",
+        },
+        {
+          ID: 25,
+          CLUES: "CSIMB005536",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "CHALCHIHUITAN",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE CHALCHIHUITÁN",
+        },
+        {
+          ID: 26,
+          CLUES: "GRIMB007712",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "XOCHIHUEHUETLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO XOCHIHUEHUETLAN",
+        },
+        {
+          ID: 27,
+          CLUES: "GRIMB006930",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TEPECOACUILCO DE TRUJANO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO XALITLA",
+        },
+        {
+          ID: 28,
+          CLUES: "GRIMB009054",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ZAPOTITLAN TABLAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD DE ZAPOTITLÁN TABLAS",
+        },
+        {
+          ID: 29,
+          CLUES: "GRIMB007753",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "XOCHISTLAHUACA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO XOCHISTLÁHUACA",
+        },
+        {
+          ID: 30,
+          CLUES: "GRIMB002030",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "COAHUAYUTLA DE JOSE MARIA IZAZAGA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO COAHUAYUTLA DE GUERRERO",
+        },
+        {
+          ID: 31,
+          CLUES: "GRIMB002812",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "CUAJINICUILAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO CUAJINICUILAPA",
+        },
+        {
+          ID: 32,
+          CLUES: "GRIMB004562",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "LEONARDO BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO FILO DE CABALLOS",
+        },
+        {
+          ID: 33,
+          CLUES: "PLIMB004020",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TLAOLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TLAOLA",
+        },
+        {
+          ID: 34,
+          CLUES: "QRIMB001623",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "TULUM",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS-BIENESTAR TULUM",
+        },
+        {
+          ID: 35,
+          CLUES: "MCIMB010842",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "OTZOLOTEPEC",
+          "NOMBRE DE LA UNIDAD": "SANTA MARÍA TETITLA",
+        },
+        {
+          ID: 36,
+          CLUES: "PLIMB000351",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "AYOTOXCO DE GUERRERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE AYOTOXCO",
+        },
+        {
+          ID: 37,
+          CLUES: "CSIMB006533",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TUXTLA GUTIERREZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL CHIAPAS NOS UNE DR. JESUS GILBERTO GOMEZ MAZA",
+        },
+        {
+          ID: 38,
+          CLUES: "SPIMB002813",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "XILITLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BASICO COMUNITARIO DE XILITLA",
+        },
+        {
+          ID: 39,
+          CLUES: "CSIMB003506",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TAPACHULA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD CIUDAD SALUD",
+        },
+        {
+          ID: 40,
+          CLUES: "CSIMB003511",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TUXTLA GUTIERREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE ESPECIALIDADES PEDIÁTRICAS",
+        },
+        {
+          ID: 41,
+          CLUES: "TSIMB002865",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD EN CD VICTORIA BICENTENARIO 2010",
+        },
+        {
+          ID: 42,
+          CLUES: "TSIMB003483",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "MIGUEL ALEMAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL MIGUEL ALEMÁN",
+        },
+        {
+          ID: 43,
+          CLUES: "CCIMB001432",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CAMPECHE",
+          "NOMBRE DE LA UNIDAD": "CEO: CENTRO ESTATAL DE ONCOLOGÍA DE CAMPECHE",
+        },
+        {
+          ID: 44,
+          CLUES: "CCIMB000942",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "PALIZADA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE PALIZADA",
+        },
+        {
+          ID: 45,
+          CLUES: "GRIMB000934",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ALCOZAUCA DE GUERRERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO ALCOZAUCA DE GUERRERO",
+        },
+        {
+          ID: 46,
+          CLUES: "GRIMB002170",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "COPALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO COPALA",
+        },
+        {
+          ID: 47,
+          CLUES: "GRIMB009491",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TLACOAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE TLACOAPA",
+        },
+        {
+          ID: 48,
+          CLUES: "SLIMB000241",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "BADIRAGUATO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL BADIRAGUATO",
+        },
+        {
+          ID: 49,
+          CLUES: "ZSIMB001233",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "TABASCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TABASCO",
+        },
+        {
+          ID: 50,
+          CLUES: "DFIMB002353",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL ONCOLÓGICO PARA LA MUJER DE LA CIUDAD DE MÉXICO",
+        },
+        {
+          ID: 51,
+          CLUES: "CSIMB005495",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TEOPISCA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE TEOPISCA",
+        },
+        {
+          ID: 52,
+          CLUES: "GRIMB004574",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "MALINALTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO MALINALTEPEC",
+        },
+        {
+          ID: 53,
+          CLUES: "GRIMB007980",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "EDUARDO NERI",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO ZUMPANGO JOSÉ PONIENTE",
+        },
+        {
+          ID: 54,
+          CLUES: "MCIMB005102",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "SULTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL JOSÉ MARÍA COSS BICENTENARIO",
+        },
+        {
+          ID: 55,
+          CLUES: "MCIMB007465",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "VILLA GUERRERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL BICENTENARIO HERMENEGILDO GALEANA VILLA GUERRERO",
+        },
+        {
+          ID: 56,
+          CLUES: "PLIMB000602",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "CUYOACO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO CUYOACO",
+        },
+        {
+          ID: 57,
+          CLUES: "SPIMB000170",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "CIUDAD DEL MAIZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO CIUDAD DEL MAÍZ",
+        },
+        {
+          ID: 58,
+          CLUES: "SLIMB000545",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "COSALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL COSALA",
+        },
+        {
+          ID: 59,
+          CLUES: "DFIMB001822",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "BENITO JUAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL XOCO",
+        },
+        {
+          ID: 60,
+          CLUES: "VZIMB004775",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TEOCELO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE TEOCELO",
+        },
+        {
+          ID: 61,
+          CLUES: "HGIMB004841",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "HUEHUETLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO HUEHUETLA",
+        },
+        {
+          ID: 62,
+          CLUES: "CSIMB003926",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "AMATAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO DE AMATÁN",
+        },
+        {
+          ID: 63,
+          CLUES: "CSIMB004626",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "EL PORVENIR",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DEL PORVENIR",
+        },
+        {
+          ID: 64,
+          CLUES: "GRIMB009030",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "SAN MARCOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD SAN MARCOS",
+        },
+        {
+          ID: 65,
+          CLUES: "NTIMB002202",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "LA YESCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL PUENTE DE CAMOTLÁN",
+        },
+        {
+          ID: 66,
+          CLUES: "PLIMB003571",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ZAPOTITLAN DE MENDEZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ZAPOTITLAN DE MENDEZ",
+        },
+        {
+          ID: 67,
+          CLUES: "QRIMB001285",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "LAZARO CARDENAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE KANTUNILKÍN",
+        },
+        {
+          ID: 68,
+          CLUES: "SPIMB001804",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "VILLA DE ARISTA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VILLA DE ARISTA",
+        },
+        {
+          ID: 69,
+          CLUES: "TCIMB002396",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "JALPA DE MENDEZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE JALPA DE MÈNDEZ",
+        },
+        {
+          ID: 70,
+          CLUES: "ZSIMB001320",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "VALPARAISO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VALPARAÍSO",
+        },
+        {
+          ID: 71,
+          CLUES: "ZSIMB001653",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "TRANCOSO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TRANCOSO",
+        },
+        {
+          ID: 72,
+          CLUES: "ZSIMB001846",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "VILLA DE COS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VILLA DE COS",
+        },
+        {
+          ID: 73,
+          CLUES: "DFIMB002085",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "VENUSTIANO CARRANZA",
+          "NOMBRE DE LA UNIDAD":
+            "CLÍNICA HOSPITAL DE ESPECIALIDADES TOXICOLÓGICAS VENUSTIANO CARRANZA",
+        },
+        {
+          ID: 74,
+          CLUES: "MCIMB002331",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "HUIXQUILUCAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL SANTOS DEGOLLADO BICENTENARIO",
+        },
+        {
+          ID: 75,
+          CLUES: "MNIMB000353",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "COAHUAYANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL COAHUAYANA",
+        },
+        {
+          ID: 76,
+          CLUES: "OCIMB007864",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN JACINTO TLACOTEPEC",
+          "NOMBRE DE LA UNIDAD": "HC TLACOTEPEC",
+        },
+        {
+          ID: 77,
+          CLUES: "SLIMB002184",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "NAVOLATO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL NAVOLATO",
+        },
+        {
+          ID: 78,
+          CLUES: "SLIMB002476",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL VALLE DE SAN LORENZO",
+        },
+        {
+          ID: 79,
+          CLUES: "TLIMB000181",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "EL CARMEN TEQUEXQUITLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO EL CARMEN TEQUEXQUITLA",
+        },
+        {
+          ID: 80,
+          CLUES: "VZIMB001922",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "HUAYACOCOTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE  HUAYACOCOTLA",
+        },
+        {
+          ID: 81,
+          CLUES: "CSIMB000151",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "ANGEL ALBINO CORZO",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE ÁNGEL ALBINO CORZO",
+        },
+        {
+          ID: 82,
+          CLUES: "GRIMB005566",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "QUECHULTENANGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO QUECHULTENANGO",
+        },
+        {
+          ID: 83,
+          CLUES: "MCIMB004344",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "EL ORO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IGNACIO LÓPEZ RAYÓN BICENTENARIO",
+        },
+        {
+          ID: 84,
+          CLUES: "NTIMB002646",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "COMPOSTELA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BASICO COMUNITARIO LAS VARAS",
+        },
+        {
+          ID: 85,
+          CLUES: "PLIMB005794",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "QUIMIXTLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO QUIMIXTLAN",
+        },
+        {
+          ID: 86,
+          CLUES: "PLIMB006004",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "IXCAQUIXTLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO DR. MIGUEL ANGEL COBOS MARIN",
+        },
+        {
+          ID: 87,
+          CLUES: "PLIMB007095",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ZACAPALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO ZACAPALA",
+        },
+        {
+          ID: 88,
+          CLUES: "SLIMB001950",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "SINALOA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE SINALOA DE LEYVA",
+        },
+        {
+          ID: 89,
+          CLUES: "SLIMB002464",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "SAN IGNACIO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL SAN IGNACIO",
+        },
+        {
+          ID: 90,
+          CLUES: "TSIMB000012",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "ABASOLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ABASOLO",
+        },
+        {
+          ID: 91,
+          CLUES: "VZIMB000254",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ALVARADO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE ALVARADO",
+        },
+        {
+          ID: 92,
+          CLUES: "ZSIMB000492",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "JALPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO JALPA (DR CALIXTO MEDINA MEDINA)",
+        },
+        {
+          ID: 93,
+          CLUES: "ZSIMB000615",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "JUAN ALDAMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO JUAN ALDAMA",
+        },
+        {
+          ID: 94,
+          CLUES: "ZSIMB000813",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "NOCHISTLAN DE MEJIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO NOCHISTLÁN DE MEJÍA",
+        },
+        {
+          ID: 95,
+          CLUES: "ZSIMB000900",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "OJOCALIENTE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO OJOCALIENTE",
+        },
+        {
+          ID: 96,
+          CLUES: "SRIMB001964",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "URES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO URES",
+        },
+        {
+          ID: 97,
+          CLUES: "CSIMB000373",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "CINTALAPA DE FIGUEROA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE CINTALAPA DE FIGUEROA",
+        },
+        {
+          ID: 98,
+          CLUES: "CSIMB003692",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "SIMOJOVEL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BASICO COMUNITARIO SIMOJOVEL",
+        },
+        {
+          ID: 99,
+          CLUES: "CSIMB006125",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "CHAMULA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE SAN JUAN CHAMULA",
+        },
+        {
+          ID: 100,
+          CLUES: "CCIMB000266",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CHAMPOTON",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL COMUNITARIO DE CHAMPOTÓN "DR.JOSÉ E. NAZAR RAIDEN"',
+        },
+        {
+          ID: 101,
+          CLUES: "MCIMB000890",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ATIZAPAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL SANTA CRUZ ATIZAPÁN BICENTENARIO",
+        },
+        {
+          ID: 102,
+          CLUES: "MNIMB000230",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "ARTEAGA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ARTEAGA",
+        },
+        {
+          ID: 103,
+          CLUES: "NTIMB002622",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "COMPOSTELA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO DE COMPOSTELA",
+        },
+        {
+          ID: 104,
+          CLUES: "PLIMB004102",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PANTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO MECAPALAPA",
+        },
+        {
+          ID: 105,
+          CLUES: "SPIMB001063",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "TAMAZUNCHALE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TAMAZUNCHALE",
+        },
+        {
+          ID: 106,
+          CLUES: "SPIMB002801",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "TAMUIN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE TAMUIN",
+        },
+        {
+          ID: 107,
+          CLUES: "SLIMB000446",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CONCORDIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL CONCORDIA",
+        },
+        {
+          ID: 108,
+          CLUES: "TCIMB002273",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "JALAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE JALAPA",
+        },
+        {
+          ID: 109,
+          CLUES: "TCIMB005271",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "JONUTA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DR. ARCENIO FILIGRANA ZUBIETA",
+        },
+        {
+          ID: 110,
+          CLUES: "VZIMB006151",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "IXHUATLAN DE MADERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD DE LLANO DE EN MEDIO",
+        },
+        {
+          ID: 111,
+          CLUES: "ZSIMB002015",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "SOMBRERETE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO SOMBRERETE",
+        },
+        {
+          ID: 112,
+          CLUES: "HGIMB005034",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "TOLCAYUCA",
+          "NOMBRE DE LA UNIDAD": "VILLA OCARANZA",
+        },
+        {
+          ID: 113,
+          CLUES: "CSIMB003646",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "BERRIOZABAL",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL BÁSICO COMUNITARIO 12 CAMAS "BERRIOZABAL"',
+        },
+        {
+          ID: 114,
+          CLUES: "CSIMB004713",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "LARRAINZAR",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE LARRAINZAR",
+        },
+        {
+          ID: 115,
+          CLUES: "CSIMB004725",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "OCOSINGO",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE SANTO DOMINGO",
+        },
+        {
+          ID: 116,
+          CLUES: "GRIMB008120",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ACATEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO ACATEPEC",
+        },
+        {
+          ID: 117,
+          CLUES: "GRIMB010285",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "HUAMUXTITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE HUAMUXTITLÁN",
+        },
+        {
+          ID: 118,
+          CLUES: "MSIMB001820",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "PUENTE DE IXTLA",
+          "NOMBRE DE LA UNIDAD": "HC PUENTE DE IXTLA DR. FERNANDO R. VIZCARRA",
+        },
+        {
+          ID: 119,
+          CLUES: "NTIMB000020",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "ACAPONETA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ACAPONETA",
+        },
+        {
+          ID: 120,
+          CLUES: "OCIMB008803",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN JUAN BAUTISTA VALLE NACIONAL",
+          "NOMBRE DE LA UNIDAD": "HC VALLE NACIONAL",
+        },
+        {
+          ID: 121,
+          CLUES: "QRIMB000421",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "BACALAR",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE BACALAR",
+        },
+        {
+          ID: 122,
+          CLUES: "QRIMB001174",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "JOSE MARIA MORELOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE JOSÉ MARÍA MORELOS",
+        },
+        {
+          ID: 123,
+          CLUES: "SLIMB001711",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "ROSARIO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE EL ROSARIO",
+        },
+        {
+          ID: 124,
+          CLUES: "TSIMB000082",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "ALDAMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ALDAMA",
+        },
+        {
+          ID: 125,
+          CLUES: "TLIMB000555",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "CONTLA DE JUAN CUAMATZI",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO SAN BERNARDINO CONTLA",
+        },
+        {
+          ID: 126,
+          CLUES: "VZIMB006180",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "CERRO AZUL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE CERRO AZUL",
+        },
+        {
+          ID: 127,
+          CLUES: "ZSIMB001834",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "CALERA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VÍCTOR ROSALES",
+        },
+        {
+          ID: 128,
+          CLUES: "MCIMB010236",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "NAUCALPAN DE JUAREZ",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO ESPECIALIZADO DE ATENCIÓN A PERSONAS CON DISCAPACIDAD VISUAL",
+        },
+        {
+          ID: 129,
+          CLUES: "CSIMB002152",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "SALTO DE AGUA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO SALTO DE AGUA",
+        },
+        {
+          ID: 130,
+          CLUES: "CSIMB005483",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "PIJIJIAPAN",
+          "NOMBRE DE LA UNIDAD":
+            "H. B. C.  DR. RAFAEL ALFARO GONZÁLEZ PIJIJIAPAN",
+        },
+        {
+          ID: 131,
+          CLUES: "MCIMB001351",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "COATEPEC HARINAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL  RAMÓN LÓPEZ RAYÓN BICENTENARIO COATEPEC HARINAS",
+        },
+        {
+          ID: 132,
+          CLUES: "MCIMB006275",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEXCALTITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL JUAN ALDAMA BICENTENARIO",
+        },
+        {
+          ID: 133,
+          CLUES: "MCIMB009186",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ZACUALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL ZACUALPAN",
+        },
+        {
+          ID: 134,
+          CLUES: "OCIMB009100",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "VILLA DE TUTUTEPEC",
+          "NOMBRE DE LA UNIDAD": "HC RÍO GRANDE",
+        },
+        {
+          ID: 135,
+          CLUES: "OCIMB009462",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTA MARIA HUATULCO",
+          "NOMBRE DE LA UNIDAD": "HC SANTA MARIA HUATULCO",
+        },
+        {
+          ID: 136,
+          CLUES: "PLIMB001285",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "IXTACAMAXTITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO  IXTACAMAXTITLAN",
+        },
+        {
+          ID: 137,
+          CLUES: "PLIMB001710",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PALMAR DE BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO CUACNOPALAN",
+        },
+        {
+          ID: 138,
+          CLUES: "PLIMB004131",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "VICENTE GUERRERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VICENTE GUERRERO",
+        },
+        {
+          ID: 139,
+          CLUES: "PLIMB004242",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "GUADALUPE VICTORIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL GUADALUPE VICTORIA",
+        },
+        {
+          ID: 140,
+          CLUES: "SPIMB000643",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "SALINAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO SALINAS DE HIDALGO",
+        },
+        {
+          ID: 141,
+          CLUES: "TCIMB002961",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "NACAJUCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE  NACAJUCA",
+        },
+        {
+          ID: 142,
+          CLUES: "VZIMB003701",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "PLAYA VICENTE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD PLAYA VICENTE",
+        },
+        {
+          ID: 143,
+          CLUES: "VZIMB005171",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TLACOTALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD TLACOTALPAN",
+        },
+        {
+          ID: 144,
+          CLUES: "ZSIMB000620",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "JUCHIPILA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO JUCHIPILA",
+        },
+        {
+          ID: 145,
+          CLUES: "CSIMB000023",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "ACALA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. MANUEL VELASCO SUAREZ ACALA",
+        },
+        {
+          ID: 146,
+          CLUES: "CSIMB004643",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TAPILULA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO, TAPILULA",
+        },
+        {
+          ID: 147,
+          CLUES: "CCIMB001164",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CALAKMUL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL XPUJIL",
+        },
+        {
+          ID: 148,
+          CLUES: "NTIMB002523",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "BAHIA DE BANDERAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BASICO COMUNITARIO DE TONDOROQUE",
+        },
+        {
+          ID: 149,
+          CLUES: "OCIMB000386",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "TAMAZULAPAM DEL ESPIRITU SANTO",
+          "NOMBRE DE LA UNIDAD": "HC TAMAZULAPAN",
+        },
+        {
+          ID: 150,
+          CLUES: "OCIMB003500",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN PEDRO TAPANATEPEC",
+          "NOMBRE DE LA UNIDAD": "HC SAN PEDRO TAPANATEPEC",
+        },
+        {
+          ID: 151,
+          CLUES: "OCIMB008045",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTO DOMINGO TEOJOMULCO",
+          "NOMBRE DE LA UNIDAD": "HC LA PAZ TEOJOMULCO-TEXMELUCAN",
+        },
+        {
+          ID: 152,
+          CLUES: "OCIMB008873",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTOS REYES NOPALA",
+          "NOMBRE DE LA UNIDAD": "HC SANTOS REYES NOPALA",
+        },
+        {
+          ID: 153,
+          CLUES: "OCIMB009416",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "TEOTITLAN DE FLORES MAGON",
+          "NOMBRE DE LA UNIDAD": "HC TEOTITLÁN DE FLORES MAGÓN",
+        },
+        {
+          ID: 154,
+          CLUES: "PLIMB000433",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "COXCATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO COXCATLAN",
+        },
+        {
+          ID: 155,
+          CLUES: "PLIMB003093",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TULCINGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TULCINGO DE VALLE",
+        },
+        {
+          ID: 156,
+          CLUES: "PLIMB005263",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ACAJETE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ACAJETE-TEPETZALA",
+        },
+        {
+          ID: 157,
+          CLUES: "SLIMB000895",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CHOIX",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL CHOIX",
+        },
+        {
+          ID: 158,
+          CLUES: "VZIMB006122",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "MECAYAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE TONALAPAN",
+        },
+        {
+          ID: 159,
+          CLUES: "CSIMB003716",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "CHIAPA DE CORZO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BASICO COMUNITARIO DE CHIAPA DE CORZO",
+        },
+        {
+          ID: 160,
+          CLUES: "GRIMB005320",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "PETATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO PETATLAN",
+        },
+        {
+          ID: 161,
+          CLUES: "GRIMB009906",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TELOLOAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE TELOLOAPAN GRO.",
+        },
+        {
+          ID: 162,
+          CLUES: "GRIMB010290",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "COYUCA DE BENITEZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD DE COYUCA DE BENITEZ",
+        },
+        {
+          ID: 163,
+          CLUES: "GRIMB010495",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "SAN LUIS ACATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS BIENESTAR SAN LUIS ACATLAN",
+        },
+        {
+          ID: 164,
+          CLUES: "MCIMB005942",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TENANGO DEL VALLE",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL MARIANO MATAMOROS BICENTENARIO TENANGO DEL VALLE",
+        },
+        {
+          ID: 165,
+          CLUES: "MCIMB007540",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "VILLA VICTORIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GUADALUPE VICTORIA BICENTENARIO",
+        },
+        {
+          ID: 166,
+          CLUES: "OCIMB000135",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "ASUNCION NOCHIXTLAN",
+          "NOMBRE DE LA UNIDAD": "HC NOCHIXTLAN",
+        },
+        {
+          ID: 167,
+          CLUES: "OCIMB008634",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "LOMA BONITA",
+          "NOMBRE DE LA UNIDAD": "HC LOMA BONITA",
+        },
+        {
+          ID: 168,
+          CLUES: "PLIMB003706",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ZOQUITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO ZOQUITLAN",
+        },
+        {
+          ID: 169,
+          CLUES: "PLIMB004073",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "AJALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO AJALPAN",
+        },
+        {
+          ID: 170,
+          CLUES: "PLIMB007416",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "VENUSTIANO CARRANZA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL VENUSTIANO CARRANZA",
+        },
+        {
+          ID: 171,
+          CLUES: "SLIMB001554",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "MOCORITO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL MOCORITO",
+        },
+        {
+          ID: 172,
+          CLUES: "VZIMB001794",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "GUTIERREZ ZAMORA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE GUTIÉRREZ ZAMORA",
+        },
+        {
+          ID: 173,
+          CLUES: "YNSSA013481",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "TICUL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE TICUL, YUCATÁN",
+        },
+        {
+          ID: 174,
+          CLUES: "MCIMB002874",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "XALATLACO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL XALATLACO MARIANO MATAMOROS",
+        },
+        {
+          ID: 175,
+          CLUES: "MCIMB007960",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ZUMPANGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL SAN JUAN ZITLALTEPEC",
+        },
+        {
+          ID: 176,
+          CLUES: "NTIMB002745",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "TUXPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TUXPAN",
+        },
+        {
+          ID: 177,
+          CLUES: "OCIMB008774",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "NEJAPA DE MADERO",
+          "NOMBRE DE LA UNIDAD": "HC NEJAPA DE MADERO",
+        },
+        {
+          ID: 178,
+          CLUES: "OCIMB008861",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN MIGUEL SOYALTEPEC",
+          "NOMBRE DE LA UNIDAD": "HC TEMASCAL",
+        },
+        {
+          ID: 179,
+          CLUES: "OCIMB009561",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN PEDRO HUAMELULA",
+          "NOMBRE DE LA UNIDAD": "HC SAN PEDRO HUAMELULA",
+        },
+        {
+          ID: 180,
+          CLUES: "VZIMB000691",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "CATEMACO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD CATEMACO",
+        },
+        {
+          ID: 181,
+          CLUES: "VZIMB005306",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TLAPACOYAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD TLAPACOYAN",
+        },
+        {
+          ID: 182,
+          CLUES: "VZIMB006146",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TEZONAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE TEZONAPA",
+        },
+        {
+          ID: 183,
+          CLUES: "VZIMB007860",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "JOSE AZUETA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE JOSÉ AZUETA",
+        },
+        {
+          ID: 184,
+          CLUES: "CCIMB000831",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "HOPELCHEN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL  COMUNITARIO DE  HOPELCHEN",
+        },
+        {
+          ID: 185,
+          CLUES: "HGIMB001686",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "JACALA DE LEDEZMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL JACALA",
+        },
+        {
+          ID: 186,
+          CLUES: "MCIMB004443",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "OTUMBA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL OTUMBA BICENTENARIO",
+        },
+        {
+          ID: 187,
+          CLUES: "OCIMB009445",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "VILLA SOLA DE VEGA",
+          "NOMBRE DE LA UNIDAD": "HC VILLA SOLA VEGA",
+        },
+        {
+          ID: 188,
+          CLUES: "PLIMB001121",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "HUEHUETLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO HUEHUETLA",
+        },
+        {
+          ID: 189,
+          CLUES: "PLIMB005555",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PALMAR DE BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL PALMAR DE BRAVO",
+        },
+        {
+          ID: 190,
+          CLUES: "TCIMB003265",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "TACOTALPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO DE TACOTALPA DR. RAMÓN MEDINA",
+        },
+        {
+          ID: 191,
+          CLUES: "SRIMB001351",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "MOCTEZUMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO MOCTEZUMA",
+        },
+        {
+          ID: 192,
+          CLUES: "MNIMB001415",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MORELIA",
+          "NOMBRE DE LA UNIDAD": "CENTRO ESTATAL DE ATENCION ONCOLOGICA",
+        },
+        {
+          ID: 193,
+          CLUES: "SRIMB002355",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "PUERTO PEÑASCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL PUERTO PEÑASCO",
+        },
+        {
+          ID: 194,
+          CLUES: "CSIMB003704",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "LAS ROSAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO LAS ROSAS",
+        },
+        {
+          ID: 195,
+          CLUES: "YNSSA013464",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "PETO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE PETO, YUCATÁN",
+        },
+        {
+          ID: 196,
+          CLUES: "GRIMB003705",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "GENERAL HELIODORO CASTILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO TLACOTEPEC",
+        },
+        {
+          ID: 197,
+          CLUES: "GRIMB010512",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "OLINALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE OLINALÁ",
+        },
+        {
+          ID: 198,
+          CLUES: "HGIMB000431",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "ATLAPEXCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ATLAPEXCO",
+        },
+        {
+          ID: 199,
+          CLUES: "PLIMB004732",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ZACAPOAXTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ZACAPOAXTLA",
+        },
+        {
+          ID: 200,
+          CLUES: "PLIMB007305",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PAHUATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO PAHUATLÁN DE VALLE",
+        },
+        {
+          ID: 201,
+          CLUES: "TLIMB001412",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "TLAXCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TLAXCO",
+        },
+        {
+          ID: 202,
+          CLUES: "VZIMB007732",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "NAOLINCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE NAOLINCO",
+        },
+        {
+          ID: 203,
+          CLUES: "CSIMB002683",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TILA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE TILA",
+        },
+        {
+          ID: 204,
+          CLUES: "BCIMB000623",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "SAN FELIPE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO SAN FELIPE",
+        },
+        {
+          ID: 205,
+          CLUES: "GRIMB006983",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TIXTLA DE GUERRERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO TIXTLA DE GUERRERO",
+        },
+        {
+          ID: 206,
+          CLUES: "MCIMB009051",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ACAMBAY DE RUIZ CASTAÑEDA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL ACAMBAY IGNACIO ALLENDE  BICENTENARIO",
+        },
+        {
+          ID: 207,
+          CLUES: "MCIMB010825",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTAPALUCA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL IXTAPALUCA LEONA VICARIO BICENTENARIO",
+        },
+        {
+          ID: 208,
+          CLUES: "MNIMB003952",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "NOCUPETARO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO CARACUARO-NOCUPETARO",
+        },
+        {
+          ID: 209,
+          CLUES: "MNIMB003981",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "LA HUACANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO LA HUACANA",
+        },
+        {
+          ID: 210,
+          CLUES: "MSIMB002112",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "JONACATEPEC DE LEANDRO VALLE",
+          "NOMBRE DE LA UNIDAD": "HC DE JONACATEPEC",
+        },
+        {
+          ID: 211,
+          CLUES: "NTIMB002634",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "TECUALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BASICO COMUNITARIO DE TECUALA",
+        },
+        {
+          ID: 212,
+          CLUES: "OCIMB008190",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTIAGO TAMAZOLA",
+          "NOMBRE DE LA UNIDAD": "HC TAMAZOLA",
+        },
+        {
+          ID: 213,
+          CLUES: "PLIMB000100",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "AHUACATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO AHUACATLÁN",
+        },
+        {
+          ID: 214,
+          CLUES: "PLIMB004143",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "SAN SEBASTIAN TLACOTEPEC",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO TLACOTEPEC DE PORFIRÍO DÍAZ",
+        },
+        {
+          ID: 215,
+          CLUES: "SPIMB000042",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "AQUISMON",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO AQUISMON",
+        },
+        {
+          ID: 216,
+          CLUES: "TCIMB005020",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "HUIMANGUILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO VILLA LA VENTA",
+        },
+        {
+          ID: 217,
+          CLUES: "CMIMB000103",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "COLIMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL REGIONAL UNIVERSITARIO",
+        },
+        {
+          ID: 218,
+          CLUES: "TLIMB001050",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "ZACATELCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO ZACATELCO",
+        },
+        {
+          ID: 219,
+          CLUES: "VZIMB006023",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "UXPANAPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD LA LAGUNA  POBLADO 6",
+        },
+        {
+          ID: 220,
+          CLUES: "HGIMB004795",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "TLANCHINOL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE TLANCHINOL",
+        },
+        {
+          ID: 221,
+          CLUES: "CMIMB001445",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "COLIMA",
+          "NOMBRE DE LA UNIDAD":
+            "INSTITUTO ESTATAL DE CANCEROLOGÍA LIC. CARLOS DE LA MADRID VIRGEN",
+        },
+        {
+          ID: 222,
+          CLUES: "CMIMB001153",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "VILLA DE ALVAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL",
+        },
+        {
+          ID: 223,
+          CLUES: "CCIMB000143",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CAMPECHE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO DE CAMPECHE",
+        },
+        {
+          ID: 224,
+          CLUES: "CSIMB005524",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "FRONTERA COMALAPA",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE FRONTERA COMALAPA",
+        },
+        {
+          ID: 225,
+          CLUES: "GRIMB001120",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ARCELIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL BÁSICO COMUNITARIO ARCELIA",
+        },
+        {
+          ID: 226,
+          CLUES: "GRIMB006370",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TECPAN DE GALEANA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL BÁSICO COMUNITARIO TECPAN DE GALEANA",
+        },
+        {
+          ID: 227,
+          CLUES: "HGIMB004561",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "ZIMAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL ZIMAPÁN",
+        },
+        {
+          ID: 228,
+          CLUES: "SLIMB002242",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "AHOME",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL VALLE DEL CARRIZO",
+        },
+        {
+          ID: 229,
+          CLUES: "TCIMB005505",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE FRONTERA",
+        },
+        {
+          ID: 230,
+          CLUES: "VZIMB006134",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TLAQUILPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD DE TLAQUILPAN VISTA HERMOSA",
+        },
+        {
+          ID: 231,
+          CLUES: "CCIMB000966",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CARMEN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE SABANCUY",
+        },
+        {
+          ID: 232,
+          CLUES: "MCIMB002244",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "HUEHUETOCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL HUEHUETOCA",
+        },
+        {
+          ID: 233,
+          CLUES: "MCIMB006893",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TLATLAYA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL SAN PEDRO LIMÓN",
+        },
+        {
+          ID: 234,
+          CLUES: "PLIMB004085",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TLACOTEPEC DE BENITO JUAREZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO TLACOTEPEC DE BENITO JUÁREZ",
+        },
+        {
+          ID: 235,
+          CLUES: "PLIMB004954",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "SAN JOSE CHIAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL SAN JOSÉ CHIAPA",
+        },
+        {
+          ID: 236,
+          CLUES: "QRIMB001582",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "ISLA MUJERES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE ISLA MUJERES ",
+        },
+        {
+          ID: 237,
+          CLUES: "VZIMB002511",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "JESUS CARRANZA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD SUCHILAPAN DEL RÍO. CARMEN BOUZAS DE LÓPEZ ARIAS",
+        },
+        {
+          ID: 238,
+          CLUES: "VZIMB004710",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TEMPOAL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD  DE TEMPOAL",
+        },
+        {
+          ID: 239,
+          CLUES: "VZIMB006163",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ESPINAL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE ENTABLADERO",
+        },
+        {
+          ID: 240,
+          CLUES: "CSIMB004631",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "VILLA CORZO",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE REVOLUCIÓN MEXICANA",
+        },
+        {
+          ID: 241,
+          CLUES: "MCIMB009162",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEMOAYA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL TEMOAYA",
+        },
+        {
+          ID: 242,
+          CLUES: "MCIMB010294",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "MALINALCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL MALINALCO PEDRO ASCENCIO DE ALQUISIRAS",
+        },
+        {
+          ID: 243,
+          CLUES: "MNIMB001601",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MUGICA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL NUEVA ITALIA",
+        },
+        {
+          ID: 244,
+          CLUES: "VZIMB007930",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "COSOLEACAQUE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL COSOLEACAQUE",
+        },
+        {
+          ID: 245,
+          CLUES: "CSIMB003605",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TUXTLA GUTIERREZ",
+          "NOMBRE DE LA UNIDAD":
+            "UNIDAD DE ATENCIÓN A LA SALUD MENTAL SAN AGUSTÍN",
+        },
+        {
+          ID: 246,
+          CLUES: "CCIMB001362",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CALKINI",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE CALKINÍ",
+        },
+        {
+          ID: 247,
+          CLUES: "OCIMB003816",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTA CATARINA JUQUILA",
+          "NOMBRE DE LA UNIDAD": "HC SANTA CATARINA JUQUILA",
+        },
+        {
+          ID: 248,
+          CLUES: "PLIMB007136",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TETELA DE OCAMPO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE TETELA DE OCAMPO",
+        },
+        {
+          ID: 249,
+          CLUES: "BSIMB000812",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "MULEGE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE SANTA ROSALÍA",
+        },
+        {
+          ID: 250,
+          CLUES: "BSIMB000783",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LA PAZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO DE BAJA CALIFORNIA SUR",
+        },
+        {
+          ID: 251,
+          CLUES: "CSIMB001884",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "PICHUCALCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PICHUCALCO",
+        },
+        {
+          ID: 252,
+          CLUES: "MCIMB008556",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "LUVIANOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL VALERIO TRUJANO BICENTENARIO",
+        },
+        {
+          ID: 253,
+          CLUES: "PLIMB004056",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ACATZINGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO ACATZINGO",
+        },
+        {
+          ID: 254,
+          CLUES: "SLIMB000195",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "ANGOSTURA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL ANGOSTURA",
+        },
+        {
+          ID: 255,
+          CLUES: "VZIMB007592",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "LAS CHOAPAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD DR. PEDRO CORONEL PÉREZ",
+        },
+        {
+          ID: 256,
+          CLUES: "BSIMB000503",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LORETO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE LORETO",
+        },
+        {
+          ID: 257,
+          CLUES: "HGIMB002572",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "SAN BARTOLO TUTOTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL REGIONAL OTOMI TEPEHUA",
+        },
+        {
+          ID: 258,
+          CLUES: "VZIMB006192",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TLALIXCOYAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TLALIXCOYAN",
+        },
+        {
+          ID: 259,
+          CLUES: "GRIMB008890",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TLAPA DE COMONFORT",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA MADRE Y EL NIÑO INDIGENA GUERRERENSE",
+        },
+        {
+          ID: 260,
+          CLUES: "CSIMB006241",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "OCOSINGO",
+          "NOMBRE DE LA UNIDAD": "H. B. C. DE OCOSINGO",
+        },
+        {
+          ID: 261,
+          CLUES: "MCIMB012114",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEMASCALTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL TEMASCALTEPEC",
+        },
+        {
+          ID: 262,
+          CLUES: "VZIMB008980",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "NAUTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD DE NAUTLA",
+        },
+        {
+          ID: 263,
+          CLUES: "TCIMB003446",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "TEAPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE TEAPA DR. NICANDRO L. MELO",
+        },
+        {
+          ID: 264,
+          CLUES: "MCIMB011694",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "XONACATLAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL XONACATLÁN VICENTE GUERRERO BICENTENARIO",
+        },
+        {
+          ID: 265,
+          CLUES: "VZIMB000790",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "COATEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA COMUNIDAD COATEPEC",
+        },
+        {
+          ID: 266,
+          CLUES: "VZIMB002120",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "IXHUATLAN DEL SURESTE",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO DE IXHUATLAN DEL SURESTE",
+        },
+        {
+          ID: 267,
+          CLUES: "VZIMB003276",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "OZULUAMA DE MASCAREÑAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD OZULUAMA DE MASCAREÑAS",
+        },
+        {
+          ID: 268,
+          CLUES: "MCIMB009676",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEXCOCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO DE TEXCOCO",
+        },
+        {
+          ID: 269,
+          CLUES: "MCIMB008824",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TECAMAC",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL TECAMAC LIC. CÉSAR CAMACHO QUIROZ",
+        },
+        {
+          ID: 270,
+          CLUES: "MCIMB009734",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "VILLA DEL CARBON",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL VILLA DEL CARBON",
+        },
+        {
+          ID: 271,
+          CLUES: "MNIMB003940",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "TUZANTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TUZANTLA",
+        },
+        {
+          ID: 272,
+          CLUES: "VZIMB004046",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "SANTIAGO TUXTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE SANTIAGO TUXTLA",
+        },
+        {
+          ID: 273,
+          CLUES: "MCIMB009425",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "LERMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL LERMA",
+        },
+        {
+          ID: 274,
+          CLUES: "NTIMB000353",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "IXTLAN DEL RIO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL IXTLÁN DEL RÍO",
+        },
+        {
+          ID: 275,
+          CLUES: "PLIMB002492",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TECOMATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO TECOMATLAN",
+        },
+        {
+          ID: 276,
+          CLUES: "SPIMB001920",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "EBANO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO EBANO",
+        },
+        {
+          ID: 277,
+          CLUES: "OCIMB002100",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN JUAN COTZOCON",
+          "NOMBRE DE LA UNIDAD": "HG MARÍA LOMBARDO DE CASO",
+        },
+        {
+          ID: 278,
+          CLUES: "ZSIMB002213",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "CALERA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE ESPECIALIDADES DE SALUD MENTAL",
+        },
+        {
+          ID: 279,
+          CLUES: "NTIMB000510",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "DEL NAYAR",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MIXTO JESÚS MARÍA",
+        },
+        {
+          ID: 280,
+          CLUES: "CSIMB000175",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "ARRIAGA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL JUÁREZ ARRIAGA",
+        },
+        {
+          ID: 281,
+          CLUES: "BSIMB000672",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LA PAZ",
+          "NOMBRE DE LA UNIDAD":
+            "B. HOSPITAL GENERAL CON ESPECIALIDADES JUAN MARÍA DE SALVATIERRA",
+        },
+        {
+          ID: 282,
+          CLUES: "CCIMB000674",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CANDELARIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE CANDELARIA",
+        },
+        {
+          ID: 283,
+          CLUES: "TCIMB000016",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "BALANCAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE BALANCÁN",
+        },
+        {
+          ID: 284,
+          CLUES: "CCIMB001526",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CAMPECHE",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE ESPECIALIDADES DR. JAVIER BUENFIL OSORIO",
+        },
+        {
+          ID: 285,
+          CLUES: "VZIMB008975",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "NARANJOS AMATLAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA COMUNIDAD NARANJOS AMATLÁN, VERACRUZ",
+        },
+        {
+          ID: 286,
+          CLUES: "OCIMB001844",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN JUAN BAUTISTA CUICATLAN",
+          "NOMBRE DE LA UNIDAD": "HG CUICATLAN DR. ALBERTO VARGAS MERINO",
+        },
+        {
+          ID: 287,
+          CLUES: "HGIMB001394",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "HUICHAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL HUICHAPAN",
+        },
+        {
+          ID: 288,
+          CLUES: "NTIMB001654",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "BAHIA DE BANDERAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SAN FRANCISCO",
+        },
+        {
+          ID: 289,
+          CLUES: "OCIMB003133",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN PABLO HUIXTEPEC",
+          "NOMBRE DE LA UNIDAD":
+            "HG SAN PABLO HUIXTEPEC DR. MANUEL VELASCO SUÁREZ",
+        },
+        {
+          ID: 290,
+          CLUES: "TCIMB002611",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "MACUSPANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MACUSPANA",
+        },
+        {
+          ID: 291,
+          CLUES: "VZIMB001881",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "HUATUSCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL HUATUSCO DR. DARÍO MENDEZ LIMA",
+        },
+        {
+          ID: 292,
+          CLUES: "DFIMB002266",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "IZTAPALAPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE ESPECIALIDADES DE LA CIUDAD DE MEXICO DR. BELISARIO DOMÍNGUEZ",
+        },
+        {
+          ID: 293,
+          CLUES: "VZIMB004944",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TIERRA BLANCA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE  TIERRA BLANCA JESÚS GARCÍA CORONA",
+        },
+        {
+          ID: 294,
+          CLUES: "VZIMB006105",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "LA ANTIGUA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CARDEL",
+        },
+        {
+          ID: 295,
+          CLUES: "DFIMB002650",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "IZTAPALAPA",
+          "NOMBRE DE LA UNIDAD": "CLÍNICA HOSPITAL EMILIANO ZAPATA",
+        },
+        {
+          ID: 296,
+          CLUES: "MCIMB006181",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEPETLIXPA",
+          "NOMBRE DE LA UNIDAD":
+            "HM TEPETLIXPA HERMENEGILDO GALEANA, BICENTENARIO",
+        },
+        {
+          ID: 297,
+          CLUES: "PLIMB005601",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "XICOTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL DE XICOTEPEC",
+        },
+        {
+          ID: 298,
+          CLUES: "DFIMB001921",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "CUAUHTEMOC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO PERALVILLO",
+        },
+        {
+          ID: 299,
+          CLUES: "DFIMB002090",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "VENUSTIANO CARRANZA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL INGUARÁN",
+        },
+        {
+          ID: 300,
+          CLUES: "DFIMB002003",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "MIGUEL HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO TACUBAYA",
+        },
+        {
+          ID: 301,
+          CLUES: "MNIMB000650",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "CHERAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CHERÁN",
+        },
+        {
+          ID: 302,
+          CLUES: "TCIMB001841",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "EMILIANO ZAPATA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE EMILIANO ZAPATA",
+        },
+        {
+          ID: 303,
+          CLUES: "DFIMB002102",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "VENUSTIANO CARRANZA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO MOCTEZUMA",
+        },
+        {
+          ID: 304,
+          CLUES: "TCIMB001870",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "HUIMANGUILLO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE HUIMANGUILLO  DR. ADELFO S. AGUIRRE",
+        },
+        {
+          ID: 305,
+          CLUES: "MCIMB012143",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "LA PAZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL MIGUEL HIDALGO Y COSTILLA LOS REYES LA PAZ",
+        },
+        {
+          ID: 306,
+          CLUES: "MNIMB002190",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "TACAMBARO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TACAMBARO MARIA ZENDEJAS",
+        },
+        {
+          ID: 307,
+          CLUES: "PLIMB000626",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "CHALCHICOMULA DE SESMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CIUDAD SERDÁN",
+        },
+        {
+          ID: 308,
+          CLUES: "VZIMB004384",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TANTOYUCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TANTOYUCA",
+        },
+        {
+          ID: 309,
+          CLUES: "MCIMB012196",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "NICOLAS ROMERO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL JUAN ALDAMA VILLA NICOLÁS ROMERO",
+        },
+        {
+          ID: 310,
+          CLUES: "MNIMB004751",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "AQUILA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO MARUATA",
+        },
+        {
+          ID: 311,
+          CLUES: "CMIMB000470",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "IXTLAHUACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL IXTLÁHUACAN",
+        },
+        {
+          ID: 312,
+          CLUES: "SRIMB000050",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "ALAMOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO ALAMOS",
+        },
+        {
+          ID: 313,
+          CLUES: "OCIMB007625",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTO DOMINGO TEHUANTEPEC",
+          "NOMBRE DE LA UNIDAD": "HG TEHUANTEPEC",
+        },
+        {
+          ID: 314,
+          CLUES: "QRIMB001606",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "OTHON P. BLANCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE ONCOLOGÍA IMSS-BIENESTAR CHETUMAL",
+        },
+        {
+          ID: 315,
+          CLUES: "TCIMB003253",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "PARAISO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE PARAÍSO",
+        },
+        {
+          ID: 316,
+          CLUES: "GRIMB008931",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "EDUARDO NERI",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. RAYMUNDO ABARCA ALARCÓN",
+        },
+        {
+          ID: 317,
+          CLUES: "TSIMB001103",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "NUEVO LAREDO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CIVIL NUEVO LAREDO",
+        },
+        {
+          ID: 318,
+          CLUES: "VZIMB002972",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "MISANTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MISANTLA",
+        },
+        {
+          ID: 319,
+          CLUES: "GRIMB009742",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ACAPULCO DE JUAREZ",
+          "NOMBRE DE LA UNIDAD":
+            "INSTITUTO ESTATAL DE CANCEROLOGÍA DR ARTURO BELTRÁN ORTEGA ",
+        },
+        {
+          ID: 320,
+          CLUES: "VZIMB003322",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "PANUCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PANUCO DR. MANUEL I ÁVILA",
+        },
+        {
+          ID: 321,
+          CLUES: "PLIMB002154",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "SAN MARTIN TEXMELUCAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL COMUNITARIO SAN MARTÍN TEXMELUCAN (EL MORAL)",
+        },
+        {
+          ID: 322,
+          CLUES: "HGIMB002036",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "MIXQUIAHUALA DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INTEGRAL CINTA LARGA",
+        },
+        {
+          ID: 323,
+          CLUES: "TSIMB003075",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "RIO BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL RÍO BRAVO",
+        },
+        {
+          ID: 324,
+          CLUES: "DFIMB000031",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "AZCAPOTZALCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL DR. NICOLÁS M. CEDILLO",
+        },
+        {
+          ID: 325,
+          CLUES: "CSIMB002753",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TONALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. JUAN C. CORZO TONALÁ",
+        },
+        {
+          ID: 326,
+          CLUES: "MCIMB012131",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "JIQUIPILCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MUNICIPAL HERMENEGILDO GALEANA JIQUIPILCO",
+        },
+        {
+          ID: 327,
+          CLUES: "MCIMB009022",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "JILOTEPEC",
+          "NOMBRE DE LA UNIDAD": "H.G. JILOTEPEC",
+        },
+        {
+          ID: 328,
+          CLUES: "HGIMB002304",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "PACHUCA DE SOTO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PACHUCA",
+        },
+        {
+          ID: 329,
+          CLUES: "MNIMB002091",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "SAHUAYO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SAHUAYO",
+        },
+        {
+          ID: 330,
+          CLUES: "MNIMB003923",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "PURUANDIRO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PURUANDIRO",
+        },
+        {
+          ID: 331,
+          CLUES: "MNIMB003964",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "LOS REYES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LOS REYES",
+        },
+        {
+          ID: 332,
+          CLUES: "NTIMB001724",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "SANTIAGO IXCUINTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SANTIAGO IXCUINTLA",
+        },
+        {
+          ID: 333,
+          CLUES: "OCIMB007572",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "CIUDAD IXTEPEC",
+          "NOMBRE DE LA UNIDAD": "HG CIUDAD IXTEPEC",
+        },
+        {
+          ID: 334,
+          CLUES: "TCIMB003586",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "TENOSIQUE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TENOSIQUE",
+        },
+        {
+          ID: 335,
+          CLUES: "HGIMB000151",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "ACTOPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ACTOPAN",
+        },
+        {
+          ID: 336,
+          CLUES: "MCIMB009174",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTAPAN DE LA SAL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL IXTAPAN DE LA SAL",
+        },
+        {
+          ID: 337,
+          CLUES: "MCIMB002005",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ECATEPEC DE MORELOS",
+          "NOMBRE DE LA UNIDAD": "H.G. DR. JOSÉ MARÍA RODRÍGUEZ",
+        },
+        {
+          ID: 338,
+          CLUES: "MSIMB001856",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "TEMIXCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TEMIXCO",
+        },
+        {
+          ID: 339,
+          CLUES: "SLIMB003065",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "ELDORADO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL EL DORADO",
+        },
+        {
+          ID: 340,
+          CLUES: "SRIMB002186",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "CANANEA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CANANEA",
+        },
+        {
+          ID: 341,
+          CLUES: "VZIMB001000",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "COSAMALOAPAN DE CARPIO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL COSAMALOAPAN  DR. VÍCTOR MANUEL PITALUA GONZÁLEZ",
+        },
+        {
+          ID: 342,
+          CLUES: "BSIMB000754",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "COMONDU",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CIUDAD CONSTITUCIÓN",
+        },
+        {
+          ID: 343,
+          CLUES: "HGIMB004800",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "APAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE APAN",
+        },
+        {
+          ID: 344,
+          CLUES: "BSIMB000346",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LOS CABOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL  RAÚL A. CARRILLO",
+        },
+        {
+          ID: 345,
+          CLUES: "MCIMB006946",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TOLUCA",
+          "NOMBRE DE LA UNIDAD": "H.G. DR. NICOLÁS SAN JUAN",
+        },
+        {
+          ID: 346,
+          CLUES: "OCIMB000490",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "HEROICA CIUDAD DE HUAJUAPAN DE LEON",
+          "NOMBRE DE LA UNIDAD":
+            "HG HUAJUAPAN ENF. MARÍA DEL PILAR SÁNCHEZ VILLAVICENCIO",
+        },
+        {
+          ID: 347,
+          CLUES: "SRIMB002360",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "AGUA PRIETA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE AGUA PRIETA",
+        },
+        {
+          ID: 348,
+          CLUES: "BSIMB000643",
+          ENTIDAD: "BAJA CALIFORNIA SUR",
+          MUNICIPIO: "LOS CABOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CABO SAN LUCAS",
+        },
+        {
+          ID: 349,
+          CLUES: "SRIMB002191",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "MAGDALENA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL COMUNITARIO DE MAGDALENA",
+        },
+        {
+          ID: 350,
+          CLUES: "MCIMB009145",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TOLUCA",
+          "NOMBRE DE LA UNIDAD": "CENTRO MÉDICO LIC. ADOLFO LÓPEZ MATEOS",
+        },
+        {
+          ID: 351,
+          CLUES: "MCIMB002640",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTLAHUACA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL IXTLAHUACA VALENTIN GÓMEZ FARÍAS",
+        },
+        {
+          ID: 352,
+          CLUES: "MCIMB009203",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ECATEPEC DE MORELOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LAS AMÉRICAS",
+        },
+        {
+          ID: 353,
+          CLUES: "MCIMB009215",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "NEZAHUALCOYOTL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LA PERLA NEZAHUALCOYOTL",
+        },
+        {
+          ID: 354,
+          CLUES: "PLIMB007170",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TECAMACHALCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TECAMACHALCO",
+        },
+        {
+          ID: 355,
+          CLUES: "TLIMB002100",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "NATIVITAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE NATIVITAS",
+        },
+        {
+          ID: 356,
+          CLUES: "VZIMB000230",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ALTOTONGA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ALTOTONGA EUFROSINA CAMACHO",
+        },
+        {
+          ID: 357,
+          CLUES: "ZSIMB000533",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "JEREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL JEREZ",
+        },
+        {
+          ID: 358,
+          CLUES: "MSIMB001861",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "OCUITUCO",
+          "NOMBRE DE LA UNIDAD": "HC DE OCUITUCO",
+        },
+        {
+          ID: 359,
+          CLUES: "MCIMB012073",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "HUEYPOXTLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL HUEYPOXTLA HERMENEGILDO GALEANA BICENTENARIO",
+        },
+        {
+          ID: 360,
+          CLUES: "YNSSA001224",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "TIZIMIN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SAN CARLOS",
+        },
+        {
+          ID: 361,
+          CLUES: "QRIMB000025",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "FELIPE CARRILLO PUERTO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE FELIPE CARRILLO PUERTO",
+        },
+        {
+          ID: 362,
+          CLUES: "SLIMB002481",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "ELOTA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LA CRUZ",
+        },
+        {
+          ID: 363,
+          CLUES: "TCIMB000190",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CARDENAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CÁRDENAS",
+        },
+        {
+          ID: 364,
+          CLUES: "TSIMB001535",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "SAN FERNANDO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SAN FERNANDO",
+        },
+        {
+          ID: 365,
+          CLUES: "TSIMB003466",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VALLE HERMOSO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL VALLE HERMOSO DR. RODOLFO TORRE CANTÙ",
+        },
+        {
+          ID: 366,
+          CLUES: "MCIMB010224",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHICONCUAC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MUNICIPAL DE CHICONCUAC",
+        },
+        {
+          ID: 367,
+          CLUES: "MNIMB003544",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "PATZCUARO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PATZCUARO",
+        },
+        {
+          ID: 368,
+          CLUES: "MNIMB003911",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MARAVATIO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL MARAVATIO",
+        },
+        {
+          ID: 369,
+          CLUES: "DFIMB001064",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "LA MAGDALENA CONTRERAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL MAGDALENA CONTRERAS",
+        },
+        {
+          ID: 370,
+          CLUES: "HGIMB004952",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "METZTITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS BIENESTAR METZTITLÁN",
+        },
+        {
+          ID: 371,
+          CLUES: "TSIMB002532",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "TAMPICO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO DE TAMPICO",
+        },
+        {
+          ID: 372,
+          CLUES: "MCIMB009261",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TULTITLAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL TULTITLAN SAN PABLO DE LAS SALINAS",
+        },
+        {
+          ID: 373,
+          CLUES: "MNIMB003590",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MORELIA",
+          "NOMBRE DE LA UNIDAD": 'HOSPITAL GENERAL "DR MIGUEL SILVA"',
+        },
+        {
+          ID: 374,
+          CLUES: "MNIMB003935",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CIUDAD HIDALGO",
+        },
+        {
+          ID: 375,
+          CLUES: "TCIMB002920",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "MACUSPANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE VILLA BENITO JUÁREZ",
+        },
+        {
+          ID: 376,
+          CLUES: "VZIMB007102",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "PEROTE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PEROTE VERACRUZ",
+        },
+        {
+          ID: 377,
+          CLUES: "VZIMB008053",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ALAMO TEMAPACHE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ÁLAMO",
+        },
+        {
+          ID: 378,
+          CLUES: "CSIMB003622",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "REFORMA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE REFORMA",
+        },
+        {
+          ID: 379,
+          CLUES: "CCIMB001531",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "ESCARCEGA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE ESCARCEGA DR. JANELL ROMERO AGUILAR",
+        },
+        {
+          ID: 380,
+          CLUES: "GRIMB001436",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ATOYAC DE ALVAREZ",
+          "NOMBRE DE LA UNIDAD": "DR. JUVENTINO RODRÍGUEZ GARCÍA",
+        },
+        {
+          ID: 381,
+          CLUES: "MNIMB003532",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "ZACAPU",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ZACAPU",
+        },
+        {
+          ID: 382,
+          CLUES: "NTIMB000551",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "ROSAMORADA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ROSAMORADA",
+        },
+        {
+          ID: 383,
+          CLUES: "PLIMB005321",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "HUEJOTZINGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE HUEJOTZINGO",
+        },
+        {
+          ID: 384,
+          CLUES: "PLIMB006885",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "HUAUCHINANGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL HUAUCHINANGO",
+        },
+        {
+          ID: 385,
+          CLUES: "SRIMB002174",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "CABORCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CABORCA",
+        },
+        {
+          ID: 386,
+          CLUES: "BCIMB001422",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "PLAYAS DE ROSARITO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PLAYAS DE ROSARITO",
+        },
+        {
+          ID: 387,
+          CLUES: "NTIMB001246",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "TEPIC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL CIVIL DR. ANTONIO GONZÁLEZ GUEVARA",
+        },
+        {
+          ID: 388,
+          CLUES: "PLIMB005070",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TLATLAUQUITEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TLATLAUQUITEPEC",
+        },
+        {
+          ID: 389,
+          CLUES: "ZSIMB002295",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "LORETO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LORETO",
+        },
+        {
+          ID: 390,
+          CLUES: "OCIMB009071",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "PUTLA VILLA DE GUERRERO",
+          "NOMBRE DE LA UNIDAD": "HG PUTLA AMIGO DE LA NIÑEZ Y DE LA MADRE",
+        },
+        {
+          ID: 391,
+          CLUES: "DFIMB001385",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "TLAHUAC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL TLÁHUAC",
+        },
+        {
+          ID: 392,
+          CLUES: "MSIMB001243",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "TETECALA",
+          "NOMBRE DE LA UNIDAD":
+            "HG DE TETECALA DR. RODOLFO BECERRIL DE LA PAZ",
+        },
+        {
+          ID: 393,
+          CLUES: "PLIMB006016",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TEPEACA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TEPEACA",
+        },
+        {
+          ID: 394,
+          CLUES: "TCIMB001561",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CUNDUACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CUNDUACAN",
+        },
+        {
+          ID: 395,
+          CLUES: "HGIMB004812",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "HUEJUTLA DE REYES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE LA HUASTECA",
+        },
+        {
+          ID: 396,
+          CLUES: "PLIMB005012",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ACATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE ACATLÁN DE OSORIO",
+        },
+        {
+          ID: 397,
+          CLUES: "DFIMB000434",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL CUAUTEPEC",
+        },
+        {
+          ID: 398,
+          CLUES: "SLIMB000615",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO",
+        },
+        {
+          ID: 399,
+          CLUES: "PLIMB007112",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "CUETZALAN DEL PROGRESO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CUETZALAN",
+        },
+        {
+          ID: 400,
+          CLUES: "SRIMB001766",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "SAN LUIS RIO COLORADO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE SAN LUIS RÍO COLORADO",
+        },
+        {
+          ID: 401,
+          CLUES: "MSIMB001844",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "YAUTEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 402,
+          CLUES: "OCIMB000350",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "CHALCATONGO DE HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HC HOSPITAL INTEGRAL COMUNITARIO CHALCATONGO",
+        },
+        {
+          ID: 403,
+          CLUES: "GRIMB003961",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "HUITZUCO DE LOS FIGUEROA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE HUITZUCO",
+        },
+        {
+          ID: 404,
+          CLUES: "VZIMB003491",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "PAPANTLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL PAPANTLA  DR. JOSÉ BUILL BELENGUER",
+        },
+        {
+          ID: 405,
+          CLUES: "QRIMB000346",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "OTHON P. BLANCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL MORELOS",
+        },
+        {
+          ID: 406,
+          CLUES: "PLIMB001780",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR EDUARDO VAZQUEZ N",
+        },
+        {
+          ID: 407,
+          CLUES: "OCIMB008815",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN PEDRO MIXTEPEC",
+          "NOMBRE DE LA UNIDAD": "HG PUERTO ESCONDIDO",
+        },
+        {
+          ID: 408,
+          CLUES: "TLIMB001395",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "SAN PABLO DEL MONTE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE SAN PABLO DEL MONTE",
+        },
+        {
+          ID: 409,
+          CLUES: "CSIMB003675",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "YAJALON",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL GENERAL YAJALÓN "DR. JOSE MANUEL VELASCO SILES"',
+        },
+        {
+          ID: 410,
+          CLUES: "CCIMB000073",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CAMPECHE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DR. MANUEL CAMPOS",
+        },
+        {
+          ID: 411,
+          CLUES: "TLIMB002095",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "APETATITLAN DE ANTONIO CARVAJAL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 412,
+          CLUES: "MCIMB007231",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "VALLE DE BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL VALLE DE BRAVO",
+        },
+        {
+          ID: 413,
+          CLUES: "MCIMB009536",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHIMALHUACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CHIMALHUACÁN SAN AGUSTÍN",
+        },
+        {
+          ID: 414,
+          CLUES: "PLIMB005700",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE TRAUMATOLOGÍA Y ORTOPEDIA DOCTOR Y GENERAL RAFAEL MORENO VALLE",
+        },
+        {
+          ID: 415,
+          CLUES: "PLIMB001536",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "LIBRES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE LIBRES",
+        },
+        {
+          ID: 416,
+          CLUES: "TLIMB002025",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "CALPULALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CALPULALPAN",
+        },
+        {
+          ID: 417,
+          CLUES: "GRIMB008902",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "CHILPANCINGO DE LOS BRAVO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MADRE Y EL NIÑO GUERRERENSE",
+        },
+        {
+          ID: 418,
+          CLUES: "CSIMB001073",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "HUIXTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL HUIXTLA",
+        },
+        {
+          ID: 419,
+          CLUES: "MSIMB002351",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "AXOCHIAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE AXOCHIAPAN",
+        },
+        {
+          ID: 420,
+          CLUES: "VZIMB003911",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "SAN ANDRES TUXTLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL SAN ANDRÉS TUXTLA. DR. BERNARDO PEÑA",
+        },
+        {
+          ID: 421,
+          CLUES: "VZIMB007575",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ISLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ISLA",
+        },
+        {
+          ID: 422,
+          CLUES: "PLIMB005613",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ATLIXCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE ATLIXCO GONZALO RÍO ARRONTE",
+        },
+        {
+          ID: 423,
+          CLUES: "VZIMB002675",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "MARTINEZ DE LA TORRE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL MARTÍNEZ DE LA TORRE",
+        },
+        {
+          ID: 424,
+          CLUES: "SRIMB002594",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HUATABAMPO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DEL BAJO RIO MAYO",
+        },
+        {
+          ID: 425,
+          CLUES: "DFIMB001933",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "CUAUHTEMOC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. GREGORIO SALAS FLORES",
+        },
+        {
+          ID: 426,
+          CLUES: "OCIMB004912",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SANTIAGO PINOTEPA NACIONAL",
+          "NOMBRE DE LA UNIDAD": "HG PINOTEPA PEDRO ESPINOZA RUEDA",
+        },
+        {
+          ID: 427,
+          CLUES: "MCIMB012085",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "SAN JOSE DEL RINCON",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL JOSÉ MARÍA MORELOS Y PAVÓN BICENTENARIO SAN JOSÉ DEL RINCÓN",
+        },
+        {
+          ID: 428,
+          CLUES: "BCIMB001352",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "TIJUANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL DE TIJUANA",
+        },
+        {
+          ID: 429,
+          CLUES: "VZIMB002844",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "MINATITLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MINATITLAN",
+        },
+        {
+          ID: 430,
+          CLUES: "VZIMB002354",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "XALAPA",
+          "NOMBRE DE LA UNIDAD":
+            "INSTITUTO VERACRUZANO DE SALUD MENTAL DR. RAFAEL VELASCO FERNANDEZ",
+        },
+        {
+          ID: 431,
+          CLUES: "SPIMB002574",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "SAN LUIS POTOSI",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DR.IGNACIO MORONES PRIETO",
+        },
+        {
+          ID: 432,
+          CLUES: "SPIMB002970",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "SOLEDAD DE GRACIANO SANCHEZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE SOLEDAD DE GRACIANO SÁNCHEZ",
+        },
+        {
+          ID: 433,
+          CLUES: "YNIMB000024",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "TEKAX",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TEKAX, YUCATÁN",
+        },
+        {
+          ID: 434,
+          CLUES: "SLIMB000031",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "AHOME",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LOS MOCHIS",
+        },
+        {
+          ID: 435,
+          CLUES: "BCIMB000676",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "TECATE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TECATE",
+        },
+        {
+          ID: 436,
+          CLUES: "SLIMB002254",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "MAZATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MAZATLÁN",
+        },
+        {
+          ID: 437,
+          CLUES: "QRIMB001956",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "SOLIDARIDAD",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE PLAYA DEL CARMEN",
+        },
+        {
+          ID: 438,
+          CLUES: "DFIMB001151",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "MILPA ALTA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL MILPA ALTA",
+        },
+        {
+          ID: 439,
+          CLUES: "CMIMB001141",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "MANZANILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MANZANILLO",
+        },
+        {
+          ID: 440,
+          CLUES: "CMIMB000844",
+          ENTIDAD: "COLIMA",
+          MUNICIPIO: "TECOMAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL TECOMÁN DR. JOSÉ F. RIVAS GUZMÁN",
+        },
+        {
+          ID: 441,
+          CLUES: "NTIMB000015",
+          ENTIDAD: "NAYARIT",
+          MUNICIPIO: "TEPIC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 442,
+          CLUES: "HGIMB004573",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "PACHUCA DE SOTO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL",
+        },
+        {
+          ID: 443,
+          CLUES: "CCIMB000172",
+          ENTIDAD: "CAMPECHE",
+          MUNICIPIO: "CARMEN",
+          "NOMBRE DE LA UNIDAD": "H.G. MA. SOCORRO QUIROGA AGUILAR",
+        },
+        {
+          ID: 444,
+          CLUES: "MCIMB002565",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTAPALUCA",
+          "NOMBRE DE LA UNIDAD": "ZOQUIAPAN DR. PEDRO LÓPEZ",
+        },
+        {
+          ID: 445,
+          CLUES: "SLIMB003053",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "ESCUINAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ESCUINAPA",
+        },
+        {
+          ID: 446,
+          CLUES: "MCIMB001515",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHALCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CHALCO",
+        },
+        {
+          ID: 447,
+          CLUES: "CSIMB002234",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "SAN CRISTOBAL DE LAS CASAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA MUJER SAN CRISTÓBAL DE LAS CASAS",
+        },
+        {
+          ID: 448,
+          CLUES: "SRIMB002203",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DEL ESTADO DE SONORA",
+        },
+        {
+          ID: 449,
+          CLUES: "MCIMB004694",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "SAN FELIPE DEL PROGRESO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL SAN FELIPE DEL PROGRESO",
+        },
+        {
+          ID: 450,
+          CLUES: "SRIMB000844",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "GUAYMAS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL GUAYMAS",
+        },
+        {
+          ID: 451,
+          CLUES: "TLIMB002136",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "HUAMANTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE HUAMANTLA",
+        },
+        {
+          ID: 452,
+          CLUES: "TCIMB000786",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTRO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DR. GUSTAVO A. ROVIROSA PÉREZ",
+        },
+        {
+          ID: 453,
+          CLUES: "TCIMB000791",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTRO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DR. JUAN GRAHAM CASASUS",
+        },
+        {
+          ID: 454,
+          CLUES: "GRIMB010524",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "AYUTLA DE LOS LIBRES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS BIENESTAR AYUTLA",
+        },
+        {
+          ID: 455,
+          CLUES: "MCIMB005225",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEJUPILCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL MIGUEL HIDALGO Y COSTILLA BICENTENARIO",
+        },
+        {
+          ID: 456,
+          CLUES: "MNIMB001292",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "LAZARO CARDENAS",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL GENERAL DE LÁZARO CÁRDENAS "DRA. ELENA AVILÉS"',
+        },
+        {
+          ID: 457,
+          CLUES: "GRIMB005163",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "OMETEPEC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL OMETEPEC",
+        },
+        {
+          ID: 458,
+          CLUES: "OCIMB003401",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN PEDRO POCHUTLA",
+          "NOMBRE DE LA UNIDAD": "HG POCHUTLA",
+        },
+        {
+          ID: 459,
+          CLUES: "VZIMB006315",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "OLUTA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE OLUTA-ACAYUCAN",
+        },
+        {
+          ID: 460,
+          CLUES: "QRIMB000013",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "COZUMEL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE COZUMEL",
+        },
+        {
+          ID: 461,
+          CLUES: "MNIMB003976",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "LA PIEDAD",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL LA PIEDAD",
+        },
+        {
+          ID: 462,
+          CLUES: "DFIMB002435",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "CUAJIMALPA DE MORELOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CUAJIMALPA  ",
+        },
+        {
+          ID: 463,
+          CLUES: "MNIMB001420",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MORELIA",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL PSIQUIATRICO "DR. JOSÉ TORRES OROZCO"',
+        },
+        {
+          ID: 464,
+          CLUES: "SRIMB000926",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO CRUZ DEL NORTE HILLO",
+        },
+        {
+          ID: 465,
+          CLUES: "TSIMB002643",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "EL MANTE",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE CD. MANTE DR. EMILIO MARTÍNEZ MANAUTOU",
+        },
+        {
+          ID: 466,
+          CLUES: "DFIMB000830",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "IZTAPALAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO IZTAPALAPA",
+        },
+        {
+          ID: 467,
+          CLUES: "CSIMB001732",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "PALENQUE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL PALENQUE",
+        },
+        {
+          ID: 468,
+          CLUES: "MCIMB005860",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TENANCINGO",
+          "NOMBRE DE LA UNIDAD": "H.G. TENANCINGO",
+        },
+        {
+          ID: 469,
+          CLUES: "TSIMB001955",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. NORBERTO TREVIÑO ZAPATA",
+        },
+        {
+          ID: 470,
+          CLUES: "SRIMB001404",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "NAVOJOA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL NAVOJOA",
+        },
+        {
+          ID: 471,
+          CLUES: "TSIMB002520",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "TAMPICO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE TAMPICO DR. CARLOS CANSECO",
+        },
+        {
+          ID: 472,
+          CLUES: "VZIMB007365",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "BOCA DEL RIO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE  BOCA DEL RIO",
+        },
+        {
+          ID: 473,
+          CLUES: "HGIMB004824",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "TULA DE ALLENDE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TULA",
+        },
+        {
+          ID: 474,
+          CLUES: "MNIMB002931",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "ZAMORA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ZAMORA",
+        },
+        {
+          ID: 475,
+          CLUES: "SLIMB001134",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "GUASAVE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL GUASAVE",
+        },
+        {
+          ID: 476,
+          CLUES: "TSIMB001091",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "NUEVO LAREDO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL NUEVO LAREDO",
+        },
+        {
+          ID: 477,
+          CLUES: "TLIMB001820",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "APETATITLAN DE ANTONIO CARVAJAL",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL TLAXCALA LIC. ANSELMO CERVANTES HERNANDEZ",
+        },
+        {
+          ID: 478,
+          CLUES: "SPIMB000976",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "SOLEDAD DE GRACIANO SANCHEZ",
+          "NOMBRE DE LA UNIDAD":
+            "CLÍNICA PSIQUIÁTRICA DR. EVERARDO NEUMANN PEÑA",
+        },
+        {
+          ID: 479,
+          CLUES: "GRIMB010401",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TAXCO DE ALARCON",
+          "NOMBRE DE LA UNIDAD": "HG ADOLFO PRIETO",
+        },
+        {
+          ID: 480,
+          CLUES: "MNIMB004734",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "APATZINGAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL APATZINGAN",
+        },
+        {
+          ID: 481,
+          CLUES: "SRIMB001561",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "NOGALES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL NOGALES",
+        },
+        {
+          ID: 482,
+          CLUES: "CSIMB002980",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TUXTLA GUTIERREZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DR. RAFAEL PASCASIO GAMBOA TUXTLA",
+        },
+        {
+          ID: 483,
+          CLUES: "MCIMB009775",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "AXAPUSCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE AXAPUSCO",
+        },
+        {
+          ID: 484,
+          CLUES: "VZIMB006175",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "VERACRUZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE  TARIMOYA (VERACRUZ)",
+        },
+        {
+          ID: 485,
+          CLUES: "MCIMB012476",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ATENCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL ATENCO “FRANCISCO ALTAMIRANO NÚÑEZ”",
+        },
+        {
+          ID: 486,
+          CLUES: "VZIMB002325",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "XALAPA",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO ESTATAL DE CANCEROLOGÍA DR. MIGUEL DORANTES MESA",
+        },
+        {
+          ID: 487,
+          CLUES: "VZIMB002330",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "XALAPA",
+          "NOMBRE DE LA UNIDAD":
+            "CENTRO DE ALTA ESPECIALIDAD  DR. RAFAEL LUCIO",
+        },
+        {
+          ID: 488,
+          CLUES: "PLIMB006103",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "ZACATLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE ZACATLÁN",
+        },
+        {
+          ID: 489,
+          CLUES: "PLIMB007083",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "IZUCAR DE MATAMOROS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE IZUCAR DE MATAMOROS",
+        },
+        {
+          ID: 490,
+          CLUES: "CSIMB005582",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "VILLAFLORES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL BICENTENARIO VILLAFLORES",
+        },
+        {
+          ID: 491,
+          CLUES: "PLIMB004126",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 492,
+          CLUES: "MCIMB011986",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHALCO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL CHALCO JOSÉFA ORTÍZ DE DOMÍNGUEZ",
+        },
+        {
+          ID: 493,
+          CLUES: "MCIMB009063",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ATLACOMULCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ATLACOMULCO",
+        },
+        {
+          ID: 494,
+          CLUES: "TCIMB005266",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "COMALCALCO",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL GENERAL "DR. DESIDERIO G. ROSADO CARBAJAL"',
+        },
+        {
+          ID: 495,
+          CLUES: "OCIMB007012",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "HEROICA CIUDAD DE JUCHITAN DE ZARAGOZA",
+          "NOMBRE DE LA UNIDAD": "HG JUCHITAN DR. MACEDONIO BENITEZ FUENTES",
+        },
+        {
+          ID: 496,
+          CLUES: "GRIMB008926",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ACAPULCO DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE ACAPULCO",
+        },
+        {
+          ID: 497,
+          CLUES: "MNIMB003013",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "ZITACUARO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL ZITACUARO",
+        },
+        {
+          ID: 498,
+          CLUES: "VZIMB000983",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "CORDOBA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CORDOBA YANGA",
+        },
+        {
+          ID: 499,
+          CLUES: "VZIMB008946",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "COATZACOALCOS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL DE COATZACOALCOS",
+        },
+        {
+          ID: 500,
+          CLUES: "OCIMB008651",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SALINA CRUZ",
+          "NOMBRE DE LA UNIDAD": "HG SALINA CRUZ",
+        },
+        {
+          ID: 501,
+          CLUES: "VZIMB005533",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "VERACRUZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE ALTA ESPECIALIDAD DE VERACRUZ",
+        },
+        {
+          ID: 502,
+          CLUES: "GRIMB004311",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ZIHUATANEJO DE AZUETA",
+          "NOMBRE DE LA UNIDAD": "DR. BERNARDO SEPULVEDA GUTIÉRREZ",
+        },
+        {
+          ID: 503,
+          CLUES: "TSIMB000316",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "CIUDAD MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CIVIL CIUDAD MADERO",
+        },
+        {
+          ID: 504,
+          CLUES: "CSIMB000460",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "COMITAN DE DOMINGUEZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL MARÍA IGNACIA GANDULFO COMITAN",
+        },
+        {
+          ID: 505,
+          CLUES: "HGIMB001481",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "IXMIQUILPAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DEL VALLE DEL MEZQUITAL IXMIQUILPAN",
+        },
+        {
+          ID: 506,
+          CLUES: "MCIMB012271",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "AMECAMECA",
+          "NOMBRE DE LA UNIDAD":
+            "H.G. VALENTÍN GÓMEZ FARÍAS (SAN FRANCISCO ZENTLALPAN)",
+        },
+        {
+          ID: 507,
+          CLUES: "CSIMB005512",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "COMITAN DE DOMINGUEZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER COMITÁN",
+        },
+        {
+          ID: 508,
+          CLUES: "MCIMB008042",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "VALLE DE CHALCO SOLIDARIDAD",
+          "NOMBRE DE LA UNIDAD": "H.G. DR. FERNANDO QUIROZ GUTIÉRREZ",
+        },
+        {
+          ID: 509,
+          CLUES: "DFIMB000446",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TICOMÁN",
+        },
+        {
+          ID: 510,
+          CLUES: "TLIMB000975",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "TZOMPANTEPEC",
+          "NOMBRE DE LA UNIDAD": "H.G.R. EMILIO SÁNCHEZ PIEDRAS",
+        },
+        {
+          ID: 511,
+          CLUES: "DFIMB002341",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "TLALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TOPILEJO",
+        },
+        {
+          ID: 512,
+          CLUES: "SPIMB002125",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "MATEHUALA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MATEHUALA",
+        },
+        {
+          ID: 513,
+          CLUES: "DFIMB001706",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "XOCHIMILCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO PEDIÁTRICO XOCHIMILCO",
+        },
+        {
+          ID: 514,
+          CLUES: "MCIMB012254",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ATIZAPAN DE ZARAGOZA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL GUADALUPE VICTORIA ATIZAPÁN DE ZARAGOZA",
+        },
+        {
+          ID: 515,
+          CLUES: "MCIMB012295",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTAPALUCA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD IXTAPALUCA",
+        },
+        {
+          ID: 516,
+          CLUES: "OCIMB006826",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN BARTOLO COYOTEPEC",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DE OAXACA",
+        },
+        {
+          ID: 517,
+          CLUES: "GRIMB009042",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "COYUCA DE CATALAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL REGIONAL DR. GUILLERMO SOBERÓN ACEVEDO",
+        },
+        {
+          ID: 518,
+          CLUES: "BCIMB001796",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "TIJUANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TIJUANA ZONA ESTE",
+        },
+        {
+          ID: 519,
+          CLUES: "MSIMB000806",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "JOJUTLA",
+          "NOMBRE DE LA UNIDAD": "HG DE JOJUTLA DR. ERNESTO MEANA SAN ROMÁN",
+        },
+        {
+          ID: 520,
+          CLUES: "VZIMB005393",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "TUXPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TUXPAN DR. EMILIO ALCAZAR",
+        },
+        {
+          ID: 521,
+          CLUES: "MNIMB001403",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MORELIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 522,
+          CLUES: "GRIMB000024",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "ACAPULCO DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSP. GRAL. RENACIMIENTO",
+        },
+        {
+          ID: 523,
+          CLUES: "CSIMB005500",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "SAN CRISTOBAL DE LAS CASAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LAS CULTURAS SAN CRISTOBAL DE LAS CASAS",
+        },
+        {
+          ID: 524,
+          CLUES: "GRIMB009486",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "CHILAPA DE ALVAREZ",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CHILAPA DE ÁLVAREZ PZC",
+        },
+        {
+          ID: 525,
+          CLUES: "SLIMB002493",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 526,
+          CLUES: "TSIMB001943",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL CIVIL VICTORIA DR. JOSÉ MACÍAS HERNÁNDEZ",
+        },
+        {
+          ID: 527,
+          CLUES: "VZIMB008963",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "ORIZABA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE SALUD MENTAL ORIZABA DR. VÍCTOR M. CONCHA VÁSQUEZ",
+        },
+        {
+          ID: 528,
+          CLUES: "PLIMB004720",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TEHUACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER Y NEONATOLOGÍA",
+        },
+        {
+          ID: 529,
+          CLUES: "SPIMB002965",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "SAN LUIS POTOSI",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL DE LA NIÑEZ Y LA MUJER DR. ALBERTO LÓPEZ HERMOSA",
+        },
+        {
+          ID: 530,
+          CLUES: "OCIMB001330",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN BARTOLO COYOTEPEC",
+          "NOMBRE DE LA UNIDAD": "H PSIQUIÁTRICO GRANJA CRUZ DEL SUR",
+        },
+        {
+          ID: 531,
+          CLUES: "GRIMB010536",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "TLAPA DE COMONFORT",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL IMSS BIENESTAR TLAPA",
+        },
+        {
+          ID: 532,
+          CLUES: "ZSIMB002126",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "GUADALUPE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA MUJER",
+        },
+        {
+          ID: 533,
+          CLUES: "TSIMB001931",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "VICTORIA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INFANTIL DE TAMAULIPAS",
+        },
+        {
+          ID: 534,
+          CLUES: "TLIMB001890",
+          ENTIDAD: "TLAXCALA",
+          MUNICIPIO: "APETATITLAN DE ANTONIO CARVAJAL",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INFANTIL DE TLAXCALA",
+        },
+        {
+          ID: 535,
+          CLUES: "YNSSA013440",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "VALLADOLID",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE VALLADOLID",
+        },
+        {
+          ID: 536,
+          CLUES: "YNSSA001830",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "MERIDA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL",
+        },
+        {
+          ID: 537,
+          CLUES: "MCIMB001841",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHIMALHUACAN",
+          "NOMBRE DE LA UNIDAD": "H.G. CHIMALHUACÁN",
+        },
+        {
+          ID: 538,
+          CLUES: "SRIMB000914",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "HERMOSILLO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL INFANTIL DEL ESTADO DE SONORA",
+        },
+        {
+          ID: 539,
+          CLUES: "TSIMB002713",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "REYNOSA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL MATERNO INFANTIL DE REYNOSA",
+        },
+        {
+          ID: 540,
+          CLUES: "MCIMB011945",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TEXCOCO",
+          "NOMBRE DE LA UNIDAD": "H.G. TEXCOCO GUADALUPE VICTORIA BICENTENARIO",
+        },
+        {
+          ID: 541,
+          CLUES: "QRIMB000351",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "OTHON P. BLANCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CHETUMAL",
+        },
+        {
+          ID: 542,
+          CLUES: "DFIMB000183",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "COYOACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO COYOACÁN",
+        },
+        {
+          ID: 543,
+          CLUES: "SPIMB000585",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "RIOVERDE",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE RÍOVERDE",
+        },
+        {
+          ID: 544,
+          CLUES: "YNSSA000570",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "MERIDA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO YUCATÁN ",
+        },
+        {
+          ID: 545,
+          CLUES: "GRIMB004096",
+          ENTIDAD: "GUERRERO",
+          MUNICIPIO: "IGUALA DE LA INDEPENDENCIA",
+          "NOMBRE DE LA UNIDAD": "DR. JORGE SOBERON ACEVEDO",
+        },
+        {
+          ID: 546,
+          CLUES: "DFIMB002015",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "MIGUEL HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO LEGARIA",
+        },
+        {
+          ID: 547,
+          CLUES: "ZSIMB000113",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "FRESNILLO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL FRESNILLO (DR. JOSÉ HARO ÁVILA)",
+        },
+        {
+          ID: 548,
+          CLUES: "MNIMB002774",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "URUAPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. PEDRO DANIEL MARTÍNEZ",
+        },
+        {
+          ID: 549,
+          CLUES: "MCIMB012440",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TOLUCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PARA EL NIÑO IMIEM",
+        },
+        {
+          ID: 550,
+          CLUES: "DFIMB000410",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO SAN JUAN DE ARAGÓN",
+        },
+        {
+          ID: 551,
+          CLUES: "MSIMB000292",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "CUAUTLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CUAUTLA",
+        },
+        {
+          ID: 552,
+          CLUES: "PLIMB004925",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TEZIUTLAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TEZIUTLÁN",
+        },
+        {
+          ID: 553,
+          CLUES: "VZIMB000826",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "COATZACOALCOS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE COATZACOALCOS DR.VALENTIN GÓMEZ FARIAS",
+        },
+        {
+          ID: 554,
+          CLUES: "MCIMB012201",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CHIMALHUACAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO INFANTIL VICENTE GUERRERO CHIMALHUACÁN",
+        },
+        {
+          ID: 555,
+          CLUES: "DFIMB000760",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "IZTACALCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO IZTACALCO",
+        },
+        {
+          ID: 556,
+          CLUES: "MCIMB006951",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TOLUCA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL MATERNO PERINATAL MÓNICA PRETELINI SÁENZ",
+        },
+        {
+          ID: 557,
+          CLUES: "TCIMB000803",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTRO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DE LA MUJER",
+        },
+        {
+          ID: 558,
+          CLUES: "OCIMB001313",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "SAN BARTOLO COYOTEPEC",
+          "NOMBRE DE LA UNIDAD": "HE DE LA NIÑEZ OAXAQUEÑA",
+        },
+        {
+          ID: 559,
+          CLUES: "PLIMB005205",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "SAN ANDRES CHOLULA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE LA NIÑEZ POBLANA",
+        },
+        {
+          ID: 560,
+          CLUES: "MSIMB002235",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "EMILIANO ZAPATA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DEL NIÑO MORELENSE",
+        },
+        {
+          ID: 561,
+          CLUES: "MCIMB002570",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "IXTAPALUCA",
+          "NOMBRE DE LA UNIDAD": "H. ZOQUIAPAN GRANJA LA SALUD",
+        },
+        {
+          ID: 562,
+          CLUES: "PLIMB002516",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "TEHUACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TEHUACAN",
+        },
+        {
+          ID: 563,
+          CLUES: "DFIMB000422",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO VILLA",
+        },
+        {
+          ID: 564,
+          CLUES: "SLIMB002230",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO DE SINALOA",
+        },
+        {
+          ID: 565,
+          CLUES: "VZIMB003766",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "POZA RICA DE HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL REGIONAL  POZA RICA DE HIDALGO",
+        },
+        {
+          ID: 566,
+          CLUES: "TSIMB001260",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "REYNOSA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL REYNOSA DR. JOSÉ MARÍA CANTÚ GARZA",
+        },
+        {
+          ID: 567,
+          CLUES: "BCIMB001702",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "MEXICALI",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL MATERNO INFANTIL",
+        },
+        {
+          ID: 568,
+          CLUES: "DFIMB002020",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "MIGUEL HIDALGO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. RUBÉN LEÑERO",
+        },
+        {
+          ID: 569,
+          CLUES: "DFIMB000026",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "AZCAPOTZALCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PEDIÁTRICO AZCAPOTZALCO",
+        },
+        {
+          ID: 570,
+          CLUES: "ZSIMB002481",
+          ENTIDAD: "ZACATECAS",
+          MUNICIPIO: "ZACATECAS",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL ZACATECAS LUZ GONZÁLEZ COSIO",
+        },
+        {
+          ID: 571,
+          CLUES: "DFIMB000451",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "GUSTAVO A. MADERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL VILLA",
+        },
+        {
+          ID: 572,
+          CLUES: "MCIMB003895",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "NEZAHUALCOYOTL",
+          "NOMBRE DE LA UNIDAD": "H.G. DR. GUSTAVO BAZ PRADA",
+        },
+        {
+          ID: 573,
+          CLUES: "TCIMB000774",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTRO",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DEL NIÑO "DR. RODOLFO NIETO PADRÓN"',
+        },
+        {
+          ID: 574,
+          CLUES: "MCIMB000914",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ATIZAPAN DE ZARAGOZA",
+          "NOMBRE DE LA UNIDAD": "H.G. DR.SALVADOR GONZÁLEZ HERREJON",
+        },
+        {
+          ID: 575,
+          CLUES: "MCIMB000226",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ACOLMAN",
+          "NOMBRE DE LA UNIDAD": "TEPEXPAN DR. GUSTAVO BAZ PRADA",
+        },
+        {
+          ID: 576,
+          CLUES: "VZIMB002342",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "XALAPA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE  XALAPA  DR. LUIS F.  NACHÓN",
+        },
+        {
+          ID: 577,
+          CLUES: "BCIMB000010",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "ENSENADA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE ENSENADA",
+        },
+        {
+          ID: 578,
+          CLUES: "DFIMB002575",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "ALVARO OBREGON",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DR. ENRIQUE CABRERA",
+        },
+        {
+          ID: 579,
+          CLUES: "PLIMB004860",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "SAN ANDRES CHOLULA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CHOLULA",
+        },
+        {
+          ID: 580,
+          CLUES: "MCIMB003743",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "NAUCALPAN DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "H.G. DR. MAXIMILIANO RUÍZ CASTAÑEDA",
+        },
+        {
+          ID: 581,
+          CLUES: "DFIMB000842",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "IZTAPALAPA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL IZTAPALAPA",
+        },
+        {
+          ID: 582,
+          CLUES: "DFIMB002662",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "TLAHUAC",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TLÁHUAC",
+        },
+        {
+          ID: 583,
+          CLUES: "MNIMB003660",
+          ENTIDAD: "MICHOACAN DE OCAMPO",
+          MUNICIPIO: "MORELIA",
+          "NOMBRE DE LA UNIDAD":
+            'HOSPITAL INFANTIL DE MORELIA "EVA SAMANO DE LÓPEZ MATEOS"',
+        },
+        {
+          ID: 584,
+          CLUES: "DFIMB002674",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "TLALPAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL AJUSCO MEDIO",
+        },
+        {
+          ID: 585,
+          CLUES: "TSIMB002416",
+          ENTIDAD: "TAMAULIPAS",
+          MUNICIPIO: "MATAMOROS",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MATAMOROS",
+        },
+        {
+          ID: 586,
+          CLUES: "MCIMB012464",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "TOLUCA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL DE GINECOLOGÍA Y OBSTETRICÍA IMIEM",
+        },
+        {
+          ID: 587,
+          CLUES: "CSIMB003680",
+          ENTIDAD: "CHIAPAS",
+          MUNICIPIO: "TAPACHULA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TAPACHULA",
+        },
+        {
+          ID: 588,
+          CLUES: "TCIMB000815",
+          ENTIDAD: "TABASCO",
+          MUNICIPIO: "CENTRO",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DE SALUD MENTAL VILLAHERMOSA",
+        },
+        {
+          ID: 589,
+          CLUES: "PLIMB005910",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE LA ZONA NORTE  BICENTENARIO DE LA INDEPENDENCIA",
+        },
+        {
+          ID: 590,
+          CLUES: "SPIMB000240",
+          ENTIDAD: "SAN LUIS POTOSI",
+          MUNICIPIO: "CIUDAD VALLES",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CD. VALLES",
+        },
+        {
+          ID: 591,
+          CLUES: "HGIMB005005",
+          ENTIDAD: "HIDALGO",
+          MUNICIPIO: "SANTIAGO TULANTEPEC DE LUGO GUERRERO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE TULANCINGO",
+        },
+        {
+          ID: 592,
+          CLUES: "MCIMB000243",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ACOLMAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO JOSÉ SAYAGO",
+        },
+        {
+          ID: 593,
+          CLUES: "GTIMB000015",
+          ENTIDAD: "GUANAJUATO",
+          MUNICIPIO: "LEON",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DEL BAJÍO",
+        },
+        {
+          ID: 594,
+          CLUES: "BCIMB000355",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "MEXICALI",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE MEXICALI",
+        },
+        {
+          ID: 595,
+          CLUES: "DFIMB002114",
+          ENTIDAD: "CIUDAD DE MEXICO",
+          MUNICIPIO: "VENUSTIANO CARRANZA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL BALBUENA",
+        },
+        {
+          ID: 596,
+          CLUES: "MSIMB000386",
+          ENTIDAD: "MORELOS",
+          MUNICIPIO: "CUERNAVACA",
+          "NOMBRE DE LA UNIDAD": "HG DE CUERNAVACA DR. JOSE G. PARRES",
+        },
+        {
+          ID: 597,
+          CLUES: "MCIMB001486",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "CUAUTITLAN",
+          "NOMBRE DE LA UNIDAD": "H.G. JOSÉ VICENTE VILLADA",
+        },
+        {
+          ID: 598,
+          CLUES: "VZIMB003870",
+          ENTIDAD: "VERACRUZ DE IGNACIO DE LA LLAVE",
+          MUNICIPIO: "RIO BLANCO",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL REGIONAL RÍO BLANCO",
+        },
+        {
+          ID: 599,
+          CLUES: "OCIMB000881",
+          ENTIDAD: "OAXACA",
+          MUNICIPIO: "OAXACA DE JUAREZ",
+          "NOMBRE DE LA UNIDAD": "HG OAXACA DR. AURELIO VALDIVIESO",
+        },
+        {
+          ID: 600,
+          CLUES: "MCIMB000231",
+          ENTIDAD: "MEXICO",
+          MUNICIPIO: "ACOLMAN",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL PSIQUIÁTRICO  DR. ADOLFO M. NIETO TEPEXPAN",
+        },
+        {
+          ID: 601,
+          CLUES: "SLIMB000014",
+          ENTIDAD: "SINALOA",
+          MUNICIPIO: "CULIACAN",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL DE CULIACÁN",
+        },
+        {
+          ID: 602,
+          CLUES: "PLIMB001792",
+          ENTIDAD: "PUEBLA",
+          MUNICIPIO: "PUEBLA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL PSIQUIÁTRICO DR. RAFAEL SERRANO",
+        },
+        {
+          ID: 603,
+          CLUES: "QRIMB001973",
+          ENTIDAD: "QUINTANA ROO",
+          MUNICIPIO: "BENITO JUAREZ",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL GENERAL DE CANCÚN DR. JESÚS KUMATE RODRÍGUEZ",
+        },
+        {
+          ID: 604,
+          CLUES: "SRIMB000453",
+          ENTIDAD: "SONORA",
+          MUNICIPIO: "CAJEME",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL CD. OBREGÓN",
+        },
+        {
+          ID: 605,
+          CLUES: "BCIMB000734",
+          ENTIDAD: "BAJA CALIFORNIA",
+          MUNICIPIO: "TIJUANA",
+          "NOMBRE DE LA UNIDAD": "HOSPITAL GENERAL TIJUANA",
+        },
+        {
+          ID: 606,
+          CLUES: "YNSSA001941",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "MERIDA",
+          "NOMBRE DE LA UNIDAD": "UNEME DE ONCOLOGIA",
+        },
+        {
+          ID: 607,
+          CLUES: "YNIMB000012",
+          ENTIDAD: "YUCATAN",
+          MUNICIPIO: "MERIDA",
+          "NOMBRE DE LA UNIDAD":
+            "HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DE LA PENÍNSULA DE YUCATÁN",
+        },
+      ];
 
-<!-- ROLES COMPLETOS -->
-<div id="roles" class="card" style="display:none;">
-  <fieldset>
-    <legend>Roles y Atribuciones</legend>
-    
-    <div class="form-check">
-      <label class="form-check-label">
-        <input type="checkbox" id="role_asistente" class="form-check-input">
-        Asistente medica
-      </label>
-      <span class="text-muted">PERSONAL QUE AYUDE AL DOCTOR A REGISTRAR CITAS, CONSULTAS ETC</span>
-    </div>
+      window.onload = function () {
+        const entidadesUnicas = [...new Set(HOSPITAL_DATA.map((h) => h.ENTIDAD))];
+        const selectEntidad = document.getElementById("entidad");
+        entidadesUnicas.sort().forEach((ent) => {
+          let opt = new Option(ent, ent);
+          selectEntidad.add(opt);
+        });
+      };
 
-    <div class="form-check">
-      <label class="form-check-label">
-        <input type="checkbox" id="role_admin" class="form-check-input">
-        Administrador de catalogo
-      </label>
-      <span class="text-muted">QUIEN PODRÁ HACER MODIFICACIONES A ESTA PARTE DE CONSULTA EXTERNA</span>
-    </div>
+      function actualizarUnidades() {
+        const entSel = document.getElementById("entidad").value;
+        const selectUnidad = document.getElementById("unidad");
+        const inputMunicipio = document.getElementById("municipio");
+        const inputClues = document.getElementById("clues");
+        const inputCve = document.getElementById("cve");
 
-    <div class="form-check">
-      <label class="form-check-label">
-        <input type="checkbox" id="role_director" class="form-check-input">
-        Director
-      </label>
-      <span class="text-muted">LA DIRECTORA</span>
-    </div>
+        selectUnidad.innerHTML =
+          '<option value="">Seleccione Unidad...</option>';
+        inputMunicipio.value = "";
+        inputClues.value = "";
+        // El CVE_PRESUPUESTAL se llena manualmente por el usuario.
 
-    <div class="form-check">
-      <label class="form-check-label">
-        <input type="checkbox" id="role_jefe" class="form-check-input">
-        Jefes de servicios ( jefe de especialidad)
-      </label>
-      <span class="text-muted">EL TITULAR DE LA ESPECIALIDAD</span>
-    </div>
+        if (!entSel) return;
 
-    <div class="form-check">
-      <label class="form-check-label">
-        <input type="checkbox" id="role_agenda" class="form-check-input">
-        Agenda de citas
-      </label>
-      <span class="text-muted">PERSONAL QUE MANEJE LA AGENDA DE CITAS</span>
-    </div>
-  </fieldset>
-</div>
+        // Solo unidades que correspondan a esa entidad.
+        // Value = CLUES (ID único). Texto visible = Nombre de la unidad.
+        const unidadesUnicas = [
+          ...new Map(
+            HOSPITAL_DATA.filter((h) => h.ENTIDAD === entSel).map((h) => [h.CLUES, h])
+          ).values(),
+        ];
 
-<button id="btn-save-op" class="btn btn-primary mt-4" onclick="guardar()">Guardar Personal Operativo</button>
-<button id="btn-save-admin" class="btn btn-primary mt-4" style="display:none;" onclick="guardar()">Guardar Personal Administrativo</button>
+        unidadesUnicas
+          .sort((a, b) =>
+            (a["NOMBRE DE LA UNIDAD"] || "").localeCompare(b["NOMBRE DE LA UNIDAD"] || "", "es"),
+          )
+          .forEach((h) => {
+            selectUnidad.add(
+              new Option(h["NOMBRE DE LA UNIDAD"] || "", h.CLUES)
+            );
+          });
+      }
 
-</div>
+      // Cuando cambie la unidad médica en la pestaña Hospital, se autocompleta Municipio y CLUES.
+      function autoCompletarHospital() {
+        const entSel = document.getElementById("entidad").value;
+        const unSel = document.getElementById("unidad").value;
 
-</div>
+        const inputMunicipio = document.getElementById("municipio");
+        const inputClues = document.getElementById("clues");
 
-<script>
+        inputMunicipio.value = "";
+        inputClues.value = "";
 
-let registros=[];
-let tipo="operativo";
+        if (!entSel || !unSel) return;
 
-// --- BASE DE DATOS DE HOSPITALES ---
-// IMPORTANTE: Reemplaza estos ejemplos con los datos de tu Excel.
-// Estructura: A: clues, B: entidad, C: municipio, D: nombre, E: cve (si existe)
-const HOSPITAL_DATA = [
-  { entidad: "HIDALGO", municipio: "PACHUCA DE SOTO", nombre: "HOSPITAL GENERAL PACHUCA", clues: "HGPACH001", cve: "CVE-HGO-01" },
-  { entidad: "HIDALGO", municipio: "TULANCINGO DE BRAVO", nombre: "CENTRO DE SALUD TULANCINGO", clues: "CSTUL002", cve: "CVE-HGO-02" },
-  // PEGA AQUÍ EL RESTO DE TUS FILAS SIGUIENDO ESTE FORMATO
-];
+        // Nota: tu requerimiento indica que SOLO se llenan listas por base (Entidad + Nombre Unidad)
+        // y el CVE_PRESUPUESTAL se queda para llenar solo.
+        // Ahora el select #unidad guarda CLUES (unSel), por lo que buscamos por CLUES.
+        const h = HOSPITAL_DATA.find(
+          (x) => x.CLUES === unSel && x.ENTIDAD === entSel,
+        );
+        if (!h) return;
 
-window.onload = function() {
-  const entidadesUnicas = [...new Set(HOSPITAL_DATA.map(h => h.entidad))];
-  const selectEntidad = document.getElementById("entidad");
-  entidadesUnicas.sort().forEach(ent => {
-    let opt = new Option(ent, ent);
-    selectEntidad.add(opt);
-  });
-};
+        inputMunicipio.value = h.MUNICIPIO;
+        inputClues.value = h.CLUES;
+      }
 
-function actualizarUnidades() {
-  const entSel = document.getElementById("entidad").value;
-  const selectUnidad = document.getElementById("unidad");
-  const selectClues = document.getElementById("clues");
-  const inputCve = document.getElementById("cve");
-  
-  selectUnidad.innerHTML = '<option value="">Seleccione Unidad...</option>';
-  selectClues.innerHTML = '<option value="">Seleccione CLUES...</option>';
-  inputCve.value = "Autocompletado";
+      function switchView(v) {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
 
-  if (!entSel) return;
+        if (v === "hospital") {
+          document
+            .querySelectorAll(".view")
+            .forEach((v) => v.classList.remove("active"));
+          document.getElementById("hospital").classList.add("active");
+          document.querySelectorAll(".tab-btn")[0].classList.add("active");
+          return;
+        }
 
-  const unidadesUnicas = [...new Set(HOSPITAL_DATA.filter(h => h.entidad === entSel).map(h => h.nombre))];
-  unidadesUnicas.sort().forEach(un => {
-    let opt = new Option(un, un);
-    selectUnidad.add(opt);
-  });
-}
+        tipo = v;
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document.getElementById("registro").classList.add("active");
+        document
+          .querySelectorAll(".tab-btn")
+          [v === "operativo" ? 1 : 2].classList.add("active");
 
-function actualizarClues() {
-  const entSel = document.getElementById("entidad").value;
-  const munSel = document.getElementById("municipio").value;
-  const unSel = document.getElementById("unidad").value;
-  const selectClues = document.getElementById("clues");
-  const inputCve = document.getElementById("cve");
+        let isOp = v === "operativo";
+        let row = document.querySelector("#registro .row");
 
-  selectClues.innerHTML = '<option value="">Seleccione CLUES...</option>';
-  inputCve.value = "Autocompletado";
+        if (isOp) row.classList.remove("admin-layout");
+        else row.classList.add("admin-layout");
 
-  if (!unSel) return;
+        document.getElementById("field-clave").style.display = isOp
+          ? "block"
+          : "none";
+        document.getElementById("field-titular").style.display = isOp
+          ? "block"
+          : "none";
+        document.getElementById("field-curp").style.display = isOp
+          ? "none"
+          : "block";
+        document.getElementById("roles").style.display = isOp
+          ? "none"
+          : "block";
+        document.getElementById("btn-save-op").style.display = isOp
+          ? "flex"
+          : "none";
+        document.getElementById("btn-save-admin").style.display = isOp
+          ? "none"
+          : "flex";
 
-  const cluesFiltradas = HOSPITAL_DATA.filter(h => h.entidad === entSel && h.municipio === munSel && h.nombre === unSel);
-  cluesFiltradas.forEach(h => {
-    let opt = new Option(h.clues, h.clues);
-    selectClues.add(opt);
-  });
+        document.getElementById("lbl-nombre").textContent = isOp
+          ? "NOMBRE"
+          : "Nombre";
+        document.getElementById("lbl-apellido").textContent = isOp
+          ? "APELIDO PATERNO"
+          : "APELLIDO";
+        document.getElementById("lbl-apellido2").textContent = isOp
+          ? "APELLIDO MATERNO"
+          : "2DO APELLIDO";
+      }
 
-  // Si solo hay una CLUES para esa unidad, la seleccionamos automáticamente
-  if (cluesFiltradas.length === 1) {
-    selectClues.selectedIndex = 1;
-    actualizarCVE();
-  }
-}
+      function get(id) {
+        return document.getElementById(id)?.value || "";
+      }
+      function check(id) {
+        return document.getElementById(id)?.checked ? "Sí" : "No";
+      }
 
-function actualizarCVE() {
-  const entSel = document.getElementById("entidad").value;
-  const munSel = document.getElementById("municipio").value;
-  const unSel = document.getElementById("unidad").value;
-  const cluesSel = document.getElementById("clues").value;
-  const inputCve = document.getElementById("cve");
+      function guardar() {
+        if (tipo === "administrativo") {
+          if (get("curp").length !== 18) {
+            alert("CURP debe tener 18 caracteres");
+            return;
+          }
 
-  if (!cluesSel) {
-    inputCve.value = "Autocompletado";
-    return;
-  }
+          let roles = [
+            document.getElementById("role_asistente").checked,
+            document.getElementById("role_admin").checked,
+            document.getElementById("role_director").checked,
+            document.getElementById("role_jefe").checked,
+            document.getElementById("role_agenda").checked,
+          ];
 
-  const registro = HOSPITAL_DATA.find(h => h.entidad === entSel && h.municipio === munSel && h.nombre === unSel && h.clues === cluesSel);
-  inputCve.value = registro ? registro.cve : "";
-}
+          if (!roles.includes(true)) {
+            alert("Debes seleccionar al menos un rol");
+            return;
+          }
+        }
 
-function switchView(v){
+        registros.push([
+          get("entidad"),
+          document.getElementById("municipio").value,
+          document.getElementById("cve").value,
+          document.getElementById("clues").value,
+          get("unidad"),
+          get("clave"),
+          get("nombre"),
+          get("apellido"),
+          get("apellido2"),
+          get("curp"),
+          get("titular"),
+          check("role_asistente"),
+          check("role_admin"),
+          check("role_director"),
+          check("role_jefe"),
+          check("role_agenda"),
+        ]);
 
-document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        alert("Guardado correctamente");
+        limpiarCampos();
+      }
 
-if(v==="hospital"){
-document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-document.getElementById("hospital").classList.add("active");
-document.querySelectorAll('.tab-btn')[0].classList.add('active');
-return;
-}
+      function limpiarCampos() {
+        const ids = [
+          "clave",
+          "nombre",
+          "apellido",
+          "apellido2",
+          "curp",
+          "titular",
+        ];
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el.tagName === "SELECT") el.selectedIndex = 0;
+          else el.value = "";
+        });
+        document
+          .querySelectorAll('#roles input[type="checkbox"]')
+          .forEach((c) => (c.checked = false));
+      }
 
-tipo=v;
-document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-document.getElementById("registro").classList.add("active");
-document.querySelectorAll('.tab-btn')[v==="operativo"?1:2].classList.add('active');
+      function descargar() {
+        if (registros.length === 0) {
+          alert("No hay datos");
+          return;
+        }
+        const headers = [
+          "Entidad Federativa",
+          "Municipio",
+          "CVE_PRESUPUESTAL",
+          "CLUES",
+          "Nombre Unidad Medica",
+          "Clave Empleado",
+          "Nombre",
+          "Apellido",
+          "2do Apellido",
+          "CURP",
+          "Titular",
+          "Asistente medica",
+          "Administrador de catalogo",
+          "Director",
+          "Jefe de servicios",
+          "Agenda de citas",
+        ];
 
-let isOp=(v==="operativo");
-let row = document.querySelector("#registro .row");
+        let csv =
+          headers.join(",") +
+          "\n" +
+          registros.map((r) => r.join(",")).join("\n");
 
-if(isOp) row.classList.remove("admin-layout");
-else row.classList.add("admin-layout");
-
-document.getElementById("field-clave").style.display=isOp?"block":"none";
-document.getElementById("field-titular").style.display=isOp?"block":"none";
-document.getElementById("field-curp").style.display=isOp?"none":"block";
-document.getElementById("roles").style.display=isOp?"none":"block";
-document.getElementById("btn-save-op").style.display=isOp?"flex":"none";
-document.getElementById("btn-save-admin").style.display=isOp?"none":"flex";
-
-document.getElementById("lbl-nombre").textContent=isOp?"NOMBRE":"Nombre";
-document.getElementById("lbl-apellido").textContent=isOp?"APELIDO PATERNO":"APELLIDO";
-document.getElementById("lbl-apellido2").textContent=isOp?"APELLIDO MATERNO":"2DO APELLIDO";
-}
-
-function get(id){return document.getElementById(id)?.value||'';}
-function check(id){return document.getElementById(id)?.checked?"Sí":"No";}
-
-function guardar(){
-
-if(tipo==="administrativo"){
-
-if(get("curp").length!==18){
-alert("CURP debe tener 18 caracteres");
-return;
-}
-
-let roles=[
-document.getElementById("role_asistente").checked,
-document.getElementById("role_admin").checked,
-document.getElementById("role_director").checked,
-document.getElementById("role_jefe").checked,
-document.getElementById("role_agenda").checked
-];
-
-if(!roles.includes(true)){
-alert("Debes seleccionar al menos un rol");
-return;
-}
-}
-
-registros.push([
-get("entidad"),
-document.getElementById("municipio").value,
-document.getElementById("cve").value,
-document.getElementById("clues").value,
-get("unidad"),
-get("clave"),
-get("nombre"),
-get("apellido"),
-get("apellido2"),
-get("curp"),
-get("titular"),
-check("role_asistente"),
-check("role_admin"),
-check("role_director"),
-check("role_jefe"),
-check("role_agenda")
-]);
-
-alert("Guardado correctamente");
-limpiarCampos();
-}
-
-function limpiarCampos() {
-  const ids = ["clave", "nombre", "apellido", "apellido2", "curp", "titular"];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if(el.tagName === "SELECT") el.selectedIndex = 0;
-    else el.value = "";
-  });
-  document.querySelectorAll('#roles input[type="checkbox"]').forEach(c => c.checked = false);
-}
-
-function descargar(){
-if(registros.length===0){ alert("No hay datos"); return; }
-const headers=["Entidad Federativa","Municipio","CVE_PRESUPUESTAL","CLUES","Nombre Unidad Medica","Clave Empleado","Nombre","Apellido","2do Apellido","CURP","Titular","Asistente medica","Administrador de catalogo","Director","Jefe de servicios","Agenda de citas"];
-
-let csv=headers.join(",")+"\n"+registros.map(r=>r.join(",")).join("\n");
-
-let a=document.createElement("a");
-a.href=URL.createObjectURL(new Blob(["\ufeff"+csv]));
-a.download="agenda.csv";
-a.click();
-}
-
-</script>
-
-</body>
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob(["\ufeff" + csv]));
+        a.download = "agenda.csv";
+        a.click();
+      }
+    </script>
+  </body>
 </html>
