@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agenda Médica</title>
 
+    <!-- Librería XLSX para soporte de múltiples pestañas -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <style>
       :root {
         --bs-primary: #0d6efd;
@@ -112,11 +115,14 @@
       .col-3 {
         grid-column: span 3;
       }
+      .col-4 {
+        grid-column: span 4;
+      }
       .col-6 {
         grid-column: span 6;
       }
       @media (max-width: 768px) {
-        .col-3,
+        .col-3, .col-4,
         .col-6 {
           grid-column: span 12;
         }
@@ -247,6 +253,54 @@
       .mt-4 {
         margin-top: 1.5rem;
       }
+
+      /* Estilos para edición */
+      .editing-field {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.375rem;
+      }
+      .bg-danger { background-color: #dc3545; }
+      
+      .table-responsive {
+        overflow-x: auto;
+        margin-top: 2rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        background: white;
+      }
+      table th, table td {
+        border: 1px solid var(--bs-border-color);
+        padding: 8px;
+        text-align: left;
+      }
+      table th { background: #f8f9fa; }
+
+      .btn-sm-action {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        margin: 2px;
+        border-radius: 4px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        min-width: 70px;
+      }
     </style>
   </head>
   <body>
@@ -280,106 +334,265 @@
               d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"
             />
           </svg>
-          Descargar CSV
+          Descargar Excel
         </button>
       </div>
 
       <!-- HOSPITAL -->
       <div id="hospital" class="view active">
         <div class="card">
-          <div class="row">
-            <div class="col-6">
-              <label class="form-label">Entidad Federativa</label>
-              <select
-                id="entidad"
-                class="form-select"
-                onchange="actualizarUnidades()"
-              >
-                <option value="">Seleccione Entidad...</option>
-              </select>
+          <fieldset>
+            <legend>Ingreso de Hospital</legend>
+
+            <div class="row">
+              <div class="col-6">
+                <label class="form-label">Entidad Federativa</label>
+                <select
+                  id="entidad"
+                  class="form-select"
+                  onchange="actualizarUnidades()"
+                  aria-label="Entidad Federativa"
+                >
+                  <option value="">Seleccione Entidad...</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Nombre Unidad Médica</label>
+                <input type="text" id="search-unidad" class="form-control mb-2" placeholder="🔍 Escribe para buscar unidad..." onkeyup="actualizarUnidades()">
+                <select
+                  id="unidad"
+                  class="form-select"
+                  onchange="autoCompletarHospital()"
+                  aria-label="Nombre Unidad Médica"
+                >
+                  <option value="">Seleccione Unidad...</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Municipio</label>
+                <input
+                  id="municipio"
+                  class="form-control"
+                  placeholder="Autocompletado"
+                  readonly
+                />
+              </div>
+              <div class="col-6">
+                <label class="form-label">CLUES</label>
+                <input
+                  id="clues"
+                  class="form-control"
+                  placeholder="Autocompletado"
+                  readonly
+                />
+              </div>
+              <div class="col-6">
+                <label class="form-label">CVE_PRESUPUESTAL</label>
+                <input
+                  id="cve"
+                  class="form-control"
+                  placeholder="Escribe a mano"
+                />
+              </div>
             </div>
-            <div class="col-6">
-              <label class="form-label">Nombre Unidad Médica</label>
-              <select
-                id="unidad"
-                class="form-select"
-                onchange="autoCompletarHospital()"
-              >
-                <option value="">Seleccione Unidad...</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <label class="form-label">Municipio</label>
-              <input
-                id="municipio"
-                class="form-control"
-                placeholder="Autocompletado"
-                readonly
-              />
-            </div>
-            <div class="col-6">
-              <label class="form-label">CLUES</label>
-              <input
-                id="clues"
-                class="form-control"
-                placeholder="Autocompletado"
-                readonly
-              />
-            </div>
-            <div class="col-6">
-              <label class="form-label">CVE_PRESUPUESTAL</label>
-              <input
-                id="cve"
-                class="form-control"
-                placeholder="Escribe a mano"
-              />
-            </div>
-          </div>
+          </fieldset>
+
+          <button
+            id="btn-confirm-hospital"
+            class="btn btn-primary mt-4"
+            onclick="confirmarHospital()"
+          >
+            Iniciar nueva entrada (Guardar Hospital)
+          </button>
         </div>
       </div>
 
       <!-- REGISTRO -->
       <div id="registro" class="view">
+        <!-- SECCIÓN 1: DATOS PERSONALES -->
         <div class="card">
-          <div class="row">
-            <div id="field-clave" class="col-3">
-              <label class="form-label">Clave Empleado</label>
-              <input id="clave" class="form-control" />
+          <fieldset>
+            <legend>Datos Personales (* Obligatorio)</legend>
+            <div class="row">
+              <div id="field-clave" class="col-3">
+                <label class="form-label">Clave Empleado *</label>
+                <input id="clave" class="form-control" />
+              </div>
+              <div id="field-curp" class="col-3" style="display: none">
+                <label class="form-label">CURP</label>
+                <input id="curp" maxlength="18" class="form-control" placeholder="18 caracteres" />
+              </div>
+              <div id="field-nombre" class="col-3">
+                <label id="lbl-nombre" class="form-label">NOMBRE *</label>
+                <input id="nombre" class="form-control" />
+              </div>
+              <div id="field-apellido" class="col-3">
+                <label id="lbl-apellido" class="form-label">APELLIDO PATERNO *</label>
+                <input id="apellido" class="form-control" />
+              </div>
+              <div id="field-apellido2" class="col-3">
+                <label id="lbl-apellido2" class="form-label">APELLIDO MATERNO *</label>
+                <input id="apellido2" class="form-control" />
+              </div>
             </div>
-            <div class="col-3">
-              <label id="lbl-nombre" class="form-label">NOMBRE</label>
-              <input id="nombre" class="form-control" />
+          </fieldset>
+        </div>
+
+        <!-- SECCIÓN 2: ESPECIALIDAD -->
+        <div id="seccion-especialidad" class="card">
+          <fieldset>
+            <legend>Especialidad (* Obligatorio)</legend>
+            <div class="row">
+              <div id="field-especialidad" class="col-4">
+                <label class="form-label">Especialidad *</label>
+                <select id="especialidad" class="form-select" onchange="actualizarNomenclaturas()">
+                  <option value="">Seleccionar...</option>
+                </select>
+              </div>
+              <div id="field-tipo-consultorio" class="col-4">
+                <label class="form-label">Tipo de Consultorio *</label>
+                <select id="tipo_consultorio" class="form-select" onchange="actualizarNomenclaturas()">
+                  <option value="FISICO">FISICO</option>
+                  <option value="VIRTUAL">VIRTUAL</option>
+                </select>
+              </div>
+              <div id="field-nomenclatura" class="col-4">
+                <label class="form-label">Nomenclatura *</label>
+                <select id="nomenclatura" class="form-select">
+                  <option value="">Esperando especialidad...</option>
+                </select>
+              </div>
             </div>
-            <div class="col-3">
-              <label id="lbl-apellido" class="form-label"
-                >APELIDO PATERNO</label
+            <div class="row mt-4">
+              <div id="field-consultorio" class="col-6">
+                <label class="form-label">Nombre del Consultorio *</label>
+                <input id="consultorio" class="form-control" placeholder="Ej. Consultorio 10 o Pediatría A" />
+              </div>
+              <div id="field-titular" class="col-6">
+                <label class="form-label">&nbsp;</label>
+                <label class="form-check-label">
+                  <input type="checkbox" id="titular" class="form-check-input"> ¿ES TITULAR?
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- SECCIÓN 3: HORARIOS (Operativo Only) -->
+        <div id="horarios" class="card">
+          <fieldset>
+            <legend>Horario de Atención (* Obligatorio)</legend>
+            <div class="row">
+              <div class="col-4">
+                <label class="form-label">Inicio *</label>
+                <input type="time" id="h_ini_at" class="form-control" onfocus="initTime(this)" step="60" />
+              </div>
+              <div class="col-4">
+                <label class="form-label">Fin *</label>
+                <input type="time" id="h_fin_at" class="form-control" onfocus="initTime(this)" step="60" />
+              </div>
+              <div class="col-4">
+                <label class="form-label">Turno *</label>
+                <select id="turno" class="form-select"></select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="mt-4">
+            <legend>Horario de Cita 1 (Primera Vez) (* Obligatorio)</legend>
+            <div class="row align-items-end">
+              <div class="col-3">
+                <label class="form-label">Intervalo (min) *</label>
+                <input type="number" id="intervalo" class="form-control" value="30" onchange="calcularFinCita1()" />
+              </div>
+              <div class="col-3">
+                <label class="form-label">Inicio *</label>
+                <input type="time" id="h_ini_cita" class="form-control" onfocus="initTime(this)" onchange="calcularFinCita1()" step="60" />
+              </div>
+              <div class="col-3">
+                <label class="form-label">Fin *</label>
+                <input type="time" id="h_fin_cita" class="form-control" onfocus="initTime(this)" readonly step="60" />
+              </div>
+              <div class="col-3">
+                <label class="form-label">Ocasión de Servicio</label>
+                <select id="ocasion" class="form-select" disabled>
+                  <option value="PRIMERA VEZ">PRIMERA VEZ</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-2">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                onclick="toggleCita2()"
+                style="border-radius: 4px; padding: 2px 10px;"
+                id="btn-toggle-cita2"
               >
-              <input id="apellido" class="form-control" />
+                <span id="btn-cita2-icon">+</span> Agregar Horario Subsecuente
+              </button>
             </div>
-            <div class="col-3">
-              <label id="lbl-apellido2" class="form-label"
-                >APELLIDO MATERNO</label
-              >
-              <input id="apellido2" class="form-control" />
-            </div>
-            <div id="field-curp" class="col-3" style="display: none">
-              <label class="form-label">CURP</label>
-              <input
-                id="curp"
-                maxlength="18"
-                class="form-control"
-                placeholder="18 caracteres"
-              />
-            </div>
-            <div id="field-titular" class="col-3">
-              <label class="form-label">Titular</label>
-              <select id="titular" class="form-select">
-                <option value="">Seleccionar...</option>
-                <option>Sí</option>
-                <option>No</option>
-              </select>
-            </div>
+          </fieldset>
+
+          <div id="cita-2-container" style="display: none;">
+            <fieldset class="mt-4" style="background-color: #fcfcfc;">
+              <legend>Horario de Cita 2 (Opcional)</legend>
+              <div class="row align-items-end">
+                <div class="col-3">
+                  <label class="form-label">Intervalo Subsecuente (min)</label>
+                  <input type="number" id="intervalo2" class="form-control" value="20" onchange="calcularFinCita2()" />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">Inicio</label>
+                  <input type="time" id="h_ini_cita2" class="form-control" readonly step="60" />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">Fin (Múltiples intervalos) *</label>
+                  <select id="h_fin_cita2" class="form-select"></select>
+                </div>
+                <div class="col-3">
+                  <label class="form-label">Ocasión de Servicio</label>
+                  <select id="ocasion2" class="form-select" disabled>
+                    <option value="SUBSECUENTE">SUBSECUENTE</option>
+                  </select>
+                </div>
+              </div>
+            </fieldset>
           </div>
+
+          <fieldset class="mt-4">
+            <legend>Días de Atención</legend>
+            <div class="mt-4">
+              <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <label class="form-check-label"><input type="checkbox" id="lunes" class="form-check-input"> LUNES</label>
+                <label class="form-check-label"><input type="checkbox" id="martes" class="form-check-input"> MARTES</label>
+                <label class="form-check-label"><input type="checkbox" id="miercoles" class="form-check-input"> MIERCOLES</label>
+                <label class="form-check-label"><input type="checkbox" id="jueves" class="form-check-input"> JUEVES</label>
+                <label class="form-check-label"><input type="checkbox" id="viernes" class="form-check-input"> VIERNES</label>
+                <label class="form-check-label"><input type="checkbox" id="sabado" class="form-check-input"> SABADO</label>
+                <label class="form-check-label"><input type="checkbox" id="domingo" class="form-check-input"> DOMINGO</label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN AL FINAL DEL FORMULARIO -->
+        <div class="mb-5">
+          <button
+            id="btn-save-op"
+            class="btn btn-primary"
+            onclick="guardar()"
+          >
+            Guardar Personal Operativo
+          </button>
+          <button
+            id="btn-save-admin"
+            class="btn btn-primary"
+            style="display: none"
+            onclick="guardar()"
+          >
+            Guardar Personal Administrativo
+          </button>
+          <button id="btn-cancelar-edit" class="btn btn-secondary mt-3 w-100" style="display: none; background-color: #f8f9fa; color: #212529; border: 1px solid #ced4da;" onclick="cancelarEdicion()">Cancelar Edición</button>
         </div>
 
         <!-- ROLES COMPLETOS -->
@@ -456,27 +669,16 @@
             </div>
           </fieldset>
         </div>
-
-        <button
-          id="btn-save-op"
-          class="btn btn-primary mt-4"
-          onclick="guardar()"
-        >
-          Guardar Personal Operativo
-        </button>
-        <button
-          id="btn-save-admin"
-          class="btn btn-primary mt-4"
-          style="display: none"
-          onclick="guardar()"
-        >
-          Guardar Personal Administrativo
-        </button>
+        
+        <div class="table-responsive" id="tabla-registros-container"></div>
       </div>
     </div>
 
     <script>
-      let registros = [];
+      // Guardamos Hospital/Operativo y Administrativo por separado
+      let registrosHO = [];
+      let registrosAdmin = [];
+      let editIndex = -1; // Índice para saber si estamos editando
       let tipo = "operativo";
 
       // --- BASE DE DATOS DE HOSPITALES ---
@@ -4867,47 +5069,2629 @@
         },
       ];
 
+      const SPECIALTY_DATA = [
+        {
+          "__EMPTY": 1,
+          "Descripción Especialidad / Subespecialidad": "Alergia e Inmunología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Alergia_Inmuno_01",
+          "Descripción Consultorio y Consecutivo": "Alergia_e_Inmunología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 2,
+          "Descripción Especialidad / Subespecialidad": "Alergia e Inmunología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Alergia_Inmuno_v01",
+          "Descripción Consultorio y Consecutivo": "Alergia_e_Inmunología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 3,
+          "Descripción Especialidad / Subespecialidad": "Alergia e Inmunología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Alergia_Inmun_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Alergia_Inmunologia_Pediatrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 4,
+          "Descripción Especialidad / Subespecialidad": "Alergia e Inmunología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Alergia_Inmun_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Alergia_Inmunologia_Pediatrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 5,
+          "Descripción Especialidad / Subespecialidad": "Algología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Algologia_01",
+          "Descripción Consultorio y Consecutivo": "Algología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 6,
+          "Descripción Especialidad / Subespecialidad": "Algología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Algologia_v01",
+          "Descripción Consultorio y Consecutivo": "Algología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 7,
+          "Descripción Especialidad / Subespecialidad": "Anestesiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Anestesiolog_01",
+          "Descripción Consultorio y Consecutivo": "Anestesiología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 8,
+          "Descripción Especialidad / Subespecialidad": "Anestesiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Anestesiolog_v01",
+          "Descripción Consultorio y Consecutivo": "Anestesiología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 9,
+          "Descripción Especialidad / Subespecialidad": "Angiología y Cirugía Vascular",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Angiolog_01",
+          "Descripción Consultorio y Consecutivo": "Angiología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 10,
+          "Descripción Especialidad / Subespecialidad": "Angiología y Cirugía Vascular",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Angiolog_v01",
+          "Descripción Consultorio y Consecutivo": "Angiología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 11,
+          "Descripción Especialidad / Subespecialidad": "Audiología, otoneurologia y foniatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Audiolog_01",
+          "Descripción Consultorio y Consecutivo": "Audiología_Otoneurologia_Foniatría_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 12,
+          "Descripción Especialidad / Subespecialidad": "Audiología, otoneurologia y foniatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Audiolog_v01",
+          "Descripción Consultorio y Consecutivo": "Audiología_Otoneurologia_Foniatría_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 13,
+          "Descripción Especialidad / Subespecialidad": "Biología de la Reproducción Humana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Biolog_Rep_Hum_01",
+          "Descripción Consultorio y Consecutivo": "Biología_ de_la_Reproducción_Humana_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 14,
+          "Descripción Especialidad / Subespecialidad": "Biología de la Reproducción Humana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Biolog_Rep_Hum_v01",
+          "Descripción Consultorio y Consecutivo": "Biología_ de_la_Reproducción_Humana_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 15,
+          "Descripción Especialidad / Subespecialidad": "Cardiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 16,
+          "Descripción Especialidad / Subespecialidad": "Cardiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_v01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 17,
+          "Descripción Especialidad / Subespecialidad": "Cardiología intervencionista",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Interv_01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_Intervencionista_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 18,
+          "Descripción Especialidad / Subespecialidad": "Cardiología intervencionista",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Interv_v01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_Intervencionista_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 19,
+          "Descripción Especialidad / Subespecialidad": "Cardiología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 20,
+          "Descripción Especialidad / Subespecialidad": "Cardiología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cardiología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 21,
+          "Descripción Especialidad / Subespecialidad": "Cardiopatías congénitas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Congenit_01",
+          "Descripción Consultorio y Consecutivo": "Cardiopatías_Congénitas_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 22,
+          "Descripción Especialidad / Subespecialidad": "Cardiopatías congénitas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cardiolog_Congenit_v01",
+          "Descripción Consultorio y Consecutivo": "Cardiopatías_Congénitas_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 23,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Bariátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Bariat_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Bariátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 24,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Bariátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Bariat_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Bariátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 25,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Cabeza y Cuello",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cab_Cuello_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Cabeza_y_Cuello_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 26,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Cabeza y Cuello",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cab_Cuello_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Cabeza_y_Cuello_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 27,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Cardiotorácica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cardiovasc_Torax_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Cardiovascular_y_Torácica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 28,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Cardiotorácica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cardiovasc_Torax_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Cardiovascular_y_Torácica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 29,
+          "Descripción Especialidad / Subespecialidad": "Cirugía General",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Gral_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_General_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 30,
+          "Descripción Especialidad / Subespecialidad": "Cirugía General",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Gral_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_General_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 31,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Laparoscópica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Toraco_Abd_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Toraco_Abdominal_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 32,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Laparoscópica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Toraco_Abd_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Toraco_Abdominal_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 33,
+          "Descripción Especialidad / Subespecialidad": "Cirugía laparoscópica en cáncer",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Laparo_Canc_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Laparoscópica_en_Cáncer_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 34,
+          "Descripción Especialidad / Subespecialidad": "Cirugía laparoscópica en cáncer",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Laparo_Canc_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Laparoscópica_en_Cáncer_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 35,
+          "Descripción Especialidad / Subespecialidad": "Cirugía laparoscópica en ginecología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Lap_Gineco_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_laparoscópica_en_ginecología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 36,
+          "Descripción Especialidad / Subespecialidad": "Cirugía laparoscópica en ginecología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Lap_Gineco_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_laparoscópica_en_ginecología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 37,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Maxilo Facial",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Max_Facial_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Maxilo_Facial_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 38,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Maxilo Facial",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Max_Facial_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_ Maxilo Facial_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 39,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Mínima Invasión Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Min_Inv_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Mínima_Invasión_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 40,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Mínima Invasión Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Min_Inv_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Mínima_Invasión_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 41,
+          "Descripción Especialidad / Subespecialidad": "Cirugía oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Oncolog_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Oncológica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 42,
+          "Descripción Especialidad / Subespecialidad": "Cirugía oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Oncolog_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Oncológica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 43,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Pediátrica  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Pediat_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Pediatrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 44,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Pediátrica  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Pediat_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Pediatrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 45,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Plástica y Reconstructiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Plast_Recons_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Plástica_y_Reconstructiva_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 46,
+          "Descripción Especialidad / Subespecialidad": "Cirugía Plástica y Reconstructiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Plast_Recons_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Plástica_y_Reconstructiva_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 47,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Andrología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Androlog_01",
+          "Descripción Consultorio y Consecutivo": "Clínica_de_Andrología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 48,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Andrología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Androlog_v01",
+          "Descripción Consultorio y Consecutivo": "Clínica_de_Andrología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 49,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Displasia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Displasia_01",
+          "Descripción Consultorio y Consecutivo": "Clinica_de_Displasia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 50,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Displasia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Displasia_v01",
+          "Descripción Consultorio y Consecutivo": "Clinica_de_Displasia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 51,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Mama",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Mama_01",
+          "Descripción Consultorio y Consecutivo": "Clinica_de_Mama_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 52,
+          "Descripción Especialidad / Subespecialidad": "Clínica de Mama",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Mama_v01",
+          "Descripción Consultorio y Consecutivo": "Clinica_de_Mama_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 53,
+          "Descripción Especialidad / Subespecialidad": "Clínica del Dolor",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Dolor_01",
+          "Descripción Consultorio y Consecutivo": "Clínica_del_Dolor_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 54,
+          "Descripción Especialidad / Subespecialidad": "Clínica del Dolor",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Clinica_Dolor_v01",
+          "Descripción Consultorio y Consecutivo": "Clínica_del_Dolor_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 55,
+          "Descripción Especialidad / Subespecialidad": "Columna",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Columna_01",
+          "Descripción Consultorio y Consecutivo": "Columna_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 56,
+          "Descripción Especialidad / Subespecialidad": "Columna",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Columna_v01",
+          "Descripción Consultorio y Consecutivo": "Columna_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 57,
+          "Descripción Especialidad / Subespecialidad": "Complicación Primera Mitad  Embarazo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Complic_1a_Mit_Emb_01",
+          "Descripción Consultorio y Consecutivo": "Compl_1a_Mitad_Embarazo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 58,
+          "Descripción Especialidad / Subespecialidad": "Complicación Primera Mitad  Embarazo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Complic_1a_Mit_Emb_v01",
+          "Descripción Consultorio y Consecutivo": "Compl_1a_Mitad_Embarazo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 59,
+          "Descripción Especialidad / Subespecialidad": "Complicación Segunda Mitad Embarazo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Complic_2a_Mit_Emb_01",
+          "Descripción Consultorio y Consecutivo": "Compl_2a_Mitad_Embarazo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 60,
+          "Descripción Especialidad / Subespecialidad": "Complicación Segunda Mitad Embarazo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Complic_2a_Mit_Emb_v01",
+          "Descripción Consultorio y Consecutivo": "Compl_2a_Mitad_Embarazo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 61,
+          "Descripción Especialidad / Subespecialidad": "Comunicación humana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Comunic_Humana_01",
+          "Descripción Consultorio y Consecutivo": "Comunicacion_humana_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 62,
+          "Descripción Especialidad / Subespecialidad": "Comunicación humana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Comunic_Humana_v01",
+          "Descripción Consultorio y Consecutivo": "Comunicacion_humana_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 63,
+          "Descripción Especialidad / Subespecialidad": "Consultas en Primer Contacto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Cons_Prim_Cont_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Consultas_Primer_Contacto_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 64,
+          "Descripción Especialidad / Subespecialidad": "Consultas en Primer Contacto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Cons_Prim_Cont_v01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Consultas_Primer_Contacto_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 65,
+          "Descripción Especialidad / Subespecialidad": "Córnea y cirugía refractiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cornea_Cirug_Refract_01",
+          "Descripción Consultorio y Consecutivo": "Córnea_y_Cirugía_refractiva_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 66,
+          "Descripción Especialidad / Subespecialidad": "Córnea y cirugía refractiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cornea_Cirug_Refract_v01",
+          "Descripción Consultorio y Consecutivo": "Córnea_y_Cirugía_refractiva_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 67,
+          "Descripción Especialidad / Subespecialidad": "Dermatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dermatolog_01",
+          "Descripción Consultorio y Consecutivo": "Dermatología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 68,
+          "Descripción Especialidad / Subespecialidad": "Dermatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dermatolog_v01",
+          "Descripción Consultorio y Consecutivo": "Dermatología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 69,
+          "Descripción Especialidad / Subespecialidad": "Diagnóstico por Imagen ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Diagnost_Imagen_01",
+          "Descripción Consultorio y Consecutivo": "Diagnostico_por_Imagen_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 70,
+          "Descripción Especialidad / Subespecialidad": "Diagnóstico por Imagen ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Diagnost_Imagen_v01",
+          "Descripción Consultorio y Consecutivo": "Diagnostico_por_Imagen_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 71,
+          "Descripción Especialidad / Subespecialidad": "Endocrinología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Endocrinolog_01",
+          "Descripción Consultorio y Consecutivo": "Endocrinología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 72,
+          "Descripción Especialidad / Subespecialidad": "Endocrinología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Endocrinolog_v01",
+          "Descripción Consultorio y Consecutivo": "Endocrinología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 73,
+          "Descripción Especialidad / Subespecialidad": "Endocrinología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Endocrinolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Endocrinología_Pediát_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 74,
+          "Descripción Especialidad / Subespecialidad": "Endocrinología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Endocrinolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Endocrinología_Pediát_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 75,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Crónico-Degenerativo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Enf_Cron_Deg_01",
+          "Descripción Consultorio y Consecutivo": "Enfermera_Crónico_Degenerativo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 76,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Crónico-Degenerativo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Enf_Cron_Deg_v01",
+          "Descripción Consultorio y Consecutivo": "Enfermera_Crónico_Degenerativo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 77,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Materno Infantil",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Enf_Mat_Inf_01",
+          "Descripción Consultorio y Consecutivo": "Enfermera_Materno_Infantil_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 78,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Materno Infantil",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Enf_Mat_Inf_v01",
+          "Descripción Consultorio y Consecutivo": "Enfermera_Materno_Infanttil_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 79,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Nefróloga",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dialisis_Peritoneal_01",
+          "Descripción Consultorio y Consecutivo": "Diálisis_Peritoneal_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 80,
+          "Descripción Especialidad / Subespecialidad": "Enfermera Nefróloga",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dialisis_Peritoneal_v01",
+          "Descripción Consultorio y Consecutivo": "Diálisis_Peritoneal_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 81,
+          "Descripción Especialidad / Subespecialidad": "Epidemiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Epidemiolog_01",
+          "Descripción Consultorio y Consecutivo": "Epidemiologia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 82,
+          "Descripción Especialidad / Subespecialidad": "Epidemiología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Epidemiolog_v01",
+          "Descripción Consultorio y Consecutivo": "Epidemiologia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 83,
+          "Descripción Especialidad / Subespecialidad": "Estomatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Estomatolog_01",
+          "Descripción Consultorio y Consecutivo": "Estomatología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 84,
+          "Descripción Especialidad / Subespecialidad": "Estomatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Estomatolog_v01",
+          "Descripción Consultorio y Consecutivo": "Estomatología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 85,
+          "Descripción Especialidad / Subespecialidad": "Evaluación Diagnostica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Evaluac_Diagnos_01",
+          "Descripción Consultorio y Consecutivo": "Evaluación_Diagnostica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 86,
+          "Descripción Especialidad / Subespecialidad": "Evaluación Diagnostica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Evaluac_Diagnos_v01",
+          "Descripción Consultorio y Consecutivo": "Evaluación_Diagnostica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 87,
+          "Descripción Especialidad / Subespecialidad": "Fisiología cardiopulmonar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Fisiolog_Cardiopulm_01",
+          "Descripción Consultorio y Consecutivo": "Fisiología_Cardiopulmonar_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 88,
+          "Descripción Especialidad / Subespecialidad": "Fisiología cardiopulmonar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Fisiolog_Cardiopulm_v01",
+          "Descripción Consultorio y Consecutivo": "Fisiología_Cardiopulmonar_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 89,
+          "Descripción Especialidad / Subespecialidad": "Gastrocirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastrocirug_01",
+          "Descripción Consultorio y Consecutivo": "Gastrocirugía_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 90,
+          "Descripción Especialidad / Subespecialidad": "Gastrocirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastrocirug_v01",
+          "Descripción Consultorio y Consecutivo": "Gastrocirugía_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 91,
+          "Descripción Especialidad / Subespecialidad": "Gastroenterología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastroenterolog_01",
+          "Descripción Consultorio y Consecutivo": "Gastroenterología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 92,
+          "Descripción Especialidad / Subespecialidad": "Gastroenterología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastroenterolog_v01",
+          "Descripción Consultorio y Consecutivo": "Gastroenterología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 93,
+          "Descripción Especialidad / Subespecialidad": "Gastroenterología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastroenterolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Gastroenterología_y_Nutrición_Ped_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 94,
+          "Descripción Especialidad / Subespecialidad": "Gastroenterología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Gastroenterolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Gastroenterología_y_Nutrición_Ped_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 95,
+          "Descripción Especialidad / Subespecialidad": "Genética Médica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Genetica_01",
+          "Descripción Consultorio y Consecutivo": "Genética_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 96,
+          "Descripción Especialidad / Subespecialidad": "Genética Médica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Genetica_v01",
+          "Descripción Consultorio y Consecutivo": "Genética_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 97,
+          "Descripción Especialidad / Subespecialidad": "Geriatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Geriatr_01",
+          "Descripción Consultorio y Consecutivo": "Geriatria_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 98,
+          "Descripción Especialidad / Subespecialidad": "Geriatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Geriatr_v01",
+          "Descripción Consultorio y Consecutivo": "Geriatria_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 99,
+          "Descripción Especialidad / Subespecialidad": "Ginecología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 100,
+          "Descripción Especialidad / Subespecialidad": "Ginecología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_v01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 101,
+          "Descripción Especialidad / Subespecialidad": "Ginecología endócrina",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_Endoc_01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_Endócrina_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 102,
+          "Descripción Especialidad / Subespecialidad": "Ginecología endócrina",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_Endoc_v01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_Endócrina_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 103,
+          "Descripción Especialidad / Subespecialidad": "Ginecología Oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_Oncolog_01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_Oncológica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 104,
+          "Descripción Especialidad / Subespecialidad": "Ginecología Oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ginecolog_Oncolog_v01",
+          "Descripción Consultorio y Consecutivo": "Ginecología_Oncológica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 105,
+          "Descripción Especialidad / Subespecialidad": "Glaucoma",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Glaucoma_01",
+          "Descripción Consultorio y Consecutivo": "Glaucoma_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 106,
+          "Descripción Especialidad / Subespecialidad": "Glaucoma",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Glaucoma_v01",
+          "Descripción Consultorio y Consecutivo": "Glaucoma_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 107,
+          "Descripción Especialidad / Subespecialidad": "Hematología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hematolog_01",
+          "Descripción Consultorio y Consecutivo": "Hematología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 108,
+          "Descripción Especialidad / Subespecialidad": "Hematología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hematolog_v01",
+          "Descripción Consultorio y Consecutivo": "Hematología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 109,
+          "Descripción Especialidad / Subespecialidad": "Hematología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hematolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Hematología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 110,
+          "Descripción Especialidad / Subespecialidad": "Hematología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hematolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Hematología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 111,
+          "Descripción Especialidad / Subespecialidad": "Hipertensión pulmonar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hipertension_Pulm_01",
+          "Descripción Consultorio y Consecutivo": "Hpertensión_Pulmonar_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 112,
+          "Descripción Especialidad / Subespecialidad": "Hipertensión pulmonar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hipertension_Pulm_v01",
+          "Descripción Consultorio y Consecutivo": "Hpertensión_Pulmonar_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 113,
+          "Descripción Especialidad / Subespecialidad": "Hospital Psiquiatría Tiempo Parcial",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hosp_Psiq_Tiem_Parc_01",
+          "Descripción Consultorio y Consecutivo": "Hospital_Psiquiatria_Tiempo_Parcial_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 114,
+          "Descripción Especialidad / Subespecialidad": "Hospital Psiquiatría Tiempo Parcial",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Hosp_Psiq_Tiem_Parc_v01",
+          "Descripción Consultorio y Consecutivo": "Hospital_Psiquiatria_Tiempo_Parcial_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 115,
+          "Descripción Especialidad / Subespecialidad": "Infectología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Infectolog_01",
+          "Descripción Consultorio y Consecutivo": "Infectología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 116,
+          "Descripción Especialidad / Subespecialidad": "Infectología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Infectolog_v01",
+          "Descripción Consultorio y Consecutivo": "Infectología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 117,
+          "Descripción Especialidad / Subespecialidad": "Infectología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Infectolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Infectología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 118,
+          "Descripción Especialidad / Subespecialidad": "Infectología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Infectolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Infectología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 119,
+          "Descripción Especialidad / Subespecialidad": "Insuficiencia cardiaca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Insuficienc_Cardiac_01",
+          "Descripción Consultorio y Consecutivo": "Insuficiencia_Cardiaca_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 120,
+          "Descripción Especialidad / Subespecialidad": "Insuficiencia cardiaca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Insuficienc_Cardiac_v01",
+          "Descripción Consultorio y Consecutivo": "Insuficiencia_Cardiaca_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 121,
+          "Descripción Especialidad / Subespecialidad": "Mano",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Mano_01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Mano_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 122,
+          "Descripción Especialidad / Subespecialidad": "Mano",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Mano_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugía_Mano_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 123,
+          "Descripción Especialidad / Subespecialidad": "Mastografía de Detección",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Mastograf_Deteccion_01",
+          "Descripción Consultorio y Consecutivo": "Mastografía_de_Detección_01 ",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 124,
+          "Descripción Especialidad / Subespecialidad": "Mastografía de Detección",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Mastograf_Deteccion_v01",
+          "Descripción Consultorio y Consecutivo": "Mastografía_de_Detección_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 125,
+          "Descripción Especialidad / Subespecialidad": "Medicina del trabajo y ambiental",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Trabajo_Amb_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_del_trabajo_y_Ambiental_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 126,
+          "Descripción Especialidad / Subespecialidad": "Medicina del trabajo y ambiental",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Trabajo_Amb_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_del_trabajo_y_Ambiental_01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 127,
+          "Descripción Especialidad / Subespecialidad": "Medicina Física y Rehabilitación",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Fisica_Rehab_01",
+          "Descripción Consultorio y Consecutivo": "Med_Física_y_Rehabilitación_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 128,
+          "Descripción Especialidad / Subespecialidad": "Medicina Física y Rehabilitación",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Fisica_Rehab_v01",
+          "Descripción Consultorio y Consecutivo": "Med_Física_y_Rehabilitación_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 129,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Int_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 130,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Int_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 131,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna Extensión Hospitalaria ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Intern_Ext_Hosp_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_Extension_Hospitalaria _01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 132,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna Extensión Hospitalaria ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Intern_Ext_Hosp_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_Extension_Hospitalaria _v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 133,
+          "Descripción Especialidad / Subespecialidad": "Medicina Materno Fetal",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Materno_Fetal_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Materno_Fetal_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 134,
+          "Descripción Especialidad / Subespecialidad": "Medicina Materno Fetal",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Materno_Fetal_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Materno_Fetal_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 135,
+          "Descripción Especialidad / Subespecialidad": "Medicina nuclear e imagenología molecular",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Nuclear_Imag_Mol_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Nuclear_e_imagenología_molecular_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 136,
+          "Descripción Especialidad / Subespecialidad": "Medicina nuclear e imagenología molecular",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Nuclear_Imag_Mol_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Nuclear_e_imagenología_molecular_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 137,
+          "Descripción Especialidad / Subespecialidad": "Miembro Pélvico",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Miemb_Pelvico_01",
+          "Descripción Consultorio y Consecutivo": "Miembro_Pélvico_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 138,
+          "Descripción Especialidad / Subespecialidad": "Miembro Pélvico",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Miemb_Pelvico_v01",
+          "Descripción Consultorio y Consecutivo": "Miembro_Pélvico_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 139,
+          "Descripción Especialidad / Subespecialidad": "Miembro Torácico",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Miemb_Toracico_01",
+          "Descripción Consultorio y Consecutivo": "Miembro_Toracico_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 140,
+          "Descripción Especialidad / Subespecialidad": "Miembro Torácico",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Miemb_Toracico_v01",
+          "Descripción Consultorio y Consecutivo": "Miembro_Toracico_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 141,
+          "Descripción Especialidad / Subespecialidad": "Nefrología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nefrolog_01",
+          "Descripción Consultorio y Consecutivo": "Nefrología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 142,
+          "Descripción Especialidad / Subespecialidad": "Nefrología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nefrolog_v01",
+          "Descripción Consultorio y Consecutivo": "Nefrología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 143,
+          "Descripción Especialidad / Subespecialidad": "Nefrología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nefrolog_Pediat_01",
+          "Descripción Consultorio y Consecutivo": "Nefrología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 144,
+          "Descripción Especialidad / Subespecialidad": "Nefrología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nefrolog_Pediat_v01",
+          "Descripción Consultorio y Consecutivo": "Nefrología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 145,
+          "Descripción Especialidad / Subespecialidad": "Neumología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neumolog_01",
+          "Descripción Consultorio y Consecutivo": "Neumología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 146,
+          "Descripción Especialidad / Subespecialidad": "Neumología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neumolog_v01",
+          "Descripción Consultorio y Consecutivo": "Neumología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 147,
+          "Descripción Especialidad / Subespecialidad": "Neumología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neumolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Neumología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 148,
+          "Descripción Especialidad / Subespecialidad": "Neumología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neumolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Neumología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 149,
+          "Descripción Especialidad / Subespecialidad": "Neurocirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurocirug_01",
+          "Descripción Consultorio y Consecutivo": "Neurocirugía_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 150,
+          "Descripción Especialidad / Subespecialidad": "Neurocirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurocirug_v01",
+          "Descripción Consultorio y Consecutivo": "Neurocirugía_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 151,
+          "Descripción Especialidad / Subespecialidad": "Neurocirugía Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "NeuroCirug_Pediat_01",
+          "Descripción Consultorio y Consecutivo": "Neurocirugía_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 152,
+          "Descripción Especialidad / Subespecialidad": "Neurocirugía Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "NeuroCirug_Pediat_v01",
+          "Descripción Consultorio y Consecutivo": "Neurocirugía_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 153,
+          "Descripción Especialidad / Subespecialidad": "Neurofisiología clínica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "NeuroFisiolog_Clin_01",
+          "Descripción Consultorio y Consecutivo": "Neurofisiología_Clínica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 154,
+          "Descripción Especialidad / Subespecialidad": "Neurofisiología clínica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "NeuroFisiolog_Clin_v01",
+          "Descripción Consultorio y Consecutivo": "Neurofisiología_Clínica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 155,
+          "Descripción Especialidad / Subespecialidad": "Neurología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurolog_01",
+          "Descripción Consultorio y Consecutivo": "Neurología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 156,
+          "Descripción Especialidad / Subespecialidad": "Neurología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurolog_v01",
+          "Descripción Consultorio y Consecutivo": "Neurología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 157,
+          "Descripción Especialidad / Subespecialidad": "Neurología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Neurología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 158,
+          "Descripción Especialidad / Subespecialidad": "Neurología Pediátrica ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Neurolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Neurología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 159,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietética",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nutricion_Diet_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 160,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietética",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nutricion_Diet_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 161,
+          "Descripción Especialidad / Subespecialidad": "Obstetricia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Obstetric_01",
+          "Descripción Consultorio y Consecutivo": "Obstetricia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 162,
+          "Descripción Especialidad / Subespecialidad": "Obstetricia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Obstetric_v01",
+          "Descripción Consultorio y Consecutivo": "Obstetricia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 163,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 164,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_v01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 165,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Oncolog_01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Oncológica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 166,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología oncológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Oncolog_v01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Oncológica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 167,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Segmento Anterior",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Segmto_Ant_01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Segmto_Anterior_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 168,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Segmento Anterior",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Segmto_Ant_v01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Segmto_Anterior_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 169,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Segmento Posterior",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Segmto_Post_01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Segmto_Posterior_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 170,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Segmento Posterior",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Segmto_Post_v01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Segmto_Posterior_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 171,
+          "Descripción Especialidad / Subespecialidad": "Oncología de Mama",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Mama_01",
+          "Descripción Consultorio y Consecutivo": "Oncología_de_Mama_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 172,
+          "Descripción Especialidad / Subespecialidad": "Oncología de Mama",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Mama_v01",
+          "Descripción Consultorio y Consecutivo": "Oncología_de_Mama_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 173,
+          "Descripción Especialidad / Subespecialidad": "Oncología Médica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Med_01",
+          "Descripción Consultorio y Consecutivo": "Oncología_Médica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 174,
+          "Descripción Especialidad / Subespecialidad": "Oncología Médica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Med_v01",
+          "Descripción Consultorio y Consecutivo": "Oncología_Médica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 175,
+          "Descripción Especialidad / Subespecialidad": "Oncología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Oncología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 176,
+          "Descripción Especialidad / Subespecialidad": "Oncología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oncolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Oncología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 177,
+          "Descripción Especialidad / Subespecialidad": "Optometría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Optometria_01",
+          "Descripción Consultorio y Consecutivo": "Optometría_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 178,
+          "Descripción Especialidad / Subespecialidad": "Optometría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Optometria_v01",
+          "Descripción Consultorio y Consecutivo": "Optometría_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 179,
+          "Descripción Especialidad / Subespecialidad": "Órbita, párpados y vías lagrimales",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Orbita_Parp_Vias_Lagrim_01",
+          "Descripción Consultorio y Consecutivo": "Órbita_párpados_y_vías_lagrimales_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 180,
+          "Descripción Especialidad / Subespecialidad": "Órbita, párpados y vías lagrimales",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Orbita_Parp_Vias_Lagrim_v01",
+          "Descripción Consultorio y Consecutivo": "Órbita_párpados_y_vías_lagrimales_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 181,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ortoped_01",
+          "Descripción Consultorio y Consecutivo": "Ortopedia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 182,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ortoped_v01",
+          "Descripción Consultorio y Consecutivo": "Ortopedia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 183,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia Prog. Cirugía fin de semana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trauma_Polifract_Exp_01",
+          "Descripción Consultorio y Consecutivo": "Trauma_Polifract_y_Exp_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 184,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia Prog. Cirugía fin de semana",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trauma_Polifract_Exp_v01",
+          "Descripción Consultorio y Consecutivo": "Trauma_Polifract_y_Exp_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 185,
+          "Descripción Especialidad / Subespecialidad": "Otorrinolaringología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Otorrinolaringolog_01",
+          "Descripción Consultorio y Consecutivo": "Otorrinolaringología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 186,
+          "Descripción Especialidad / Subespecialidad": "Otorrinolaringología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Otorrinolaringolog_v01",
+          "Descripción Consultorio y Consecutivo": "Otorrinolaringología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 187,
+          "Descripción Especialidad / Subespecialidad": "Otorrinolaringología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Otorrinolaring_Pediat_01",
+          "Descripción Consultorio y Consecutivo": "Otorrinolaringología_Ped_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 188,
+          "Descripción Especialidad / Subespecialidad": "Otorrinolaringología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Otorrinolaring_Pediat_v01",
+          "Descripción Consultorio y Consecutivo": "Otorrinolaringología_Ped_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 189,
+          "Descripción Especialidad / Subespecialidad": "Pediatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Pediatria_ Med_01",
+          "Descripción Consultorio y Consecutivo": "Pediatría_Médica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 190,
+          "Descripción Especialidad / Subespecialidad": "Pediatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Pediatria_Med_v01",
+          "Descripción Consultorio y Consecutivo": "Pediatría_Médica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 191,
+          "Descripción Especialidad / Subespecialidad": "Pie y Tobillo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Pie_Tobillo_01",
+          "Descripción Consultorio y Consecutivo": "Pie_y_Tobillo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 192,
+          "Descripción Especialidad / Subespecialidad": "Pie y Tobillo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Pie_Tobillo_v01",
+          "Descripción Consultorio y Consecutivo": "Pie_y_Tobillo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 193,
+          "Descripción Especialidad / Subespecialidad": "Preeclamsia, Eclampsia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Preeclamp_Eclampsia_01",
+          "Descripción Consultorio y Consecutivo": "Preeclampsia_Eclampsia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 194,
+          "Descripción Especialidad / Subespecialidad": "Preeclamsia, Eclampsia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Preeclamp_Eclampsia_v01",
+          "Descripción Consultorio y Consecutivo": "Preeclampsia_Eclampsia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 195,
+          "Descripción Especialidad / Subespecialidad": "Proctología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Proctolog_01",
+          "Descripción Consultorio y Consecutivo": "Proctología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 196,
+          "Descripción Especialidad / Subespecialidad": "Proctología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Proctolog_v01",
+          "Descripción Consultorio y Consecutivo": "Proctología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 197,
+          "Descripción Especialidad / Subespecialidad": "Psicología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psicolog_01",
+          "Descripción Consultorio y Consecutivo": "Psicología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 198,
+          "Descripción Especialidad / Subespecialidad": "Psicología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psicolog_v01",
+          "Descripción Consultorio y Consecutivo": "Psicología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 199,
+          "Descripción Especialidad / Subespecialidad": "Psiquiatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psiquiat_01",
+          "Descripción Consultorio y Consecutivo": "Psiquiatría_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 200,
+          "Descripción Especialidad / Subespecialidad": "Psiquiatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psiquiat_v01",
+          "Descripción Consultorio y Consecutivo": "Psiquiatría_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 201,
+          "Descripción Especialidad / Subespecialidad": "Reemplazos Articulares",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reempl_Articulares_01",
+          "Descripción Consultorio y Consecutivo": "Reemplazos_Articulares_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 202,
+          "Descripción Especialidad / Subespecialidad": "Reemplazos Articulares",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reempl_Articulares_v01",
+          "Descripción Consultorio y Consecutivo": "Reemplazos_Articulares_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 203,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Cardiaca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Cardiac_01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Cardiaca_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 204,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Cardiaca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Cardiac_v01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Cardiaca_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 205,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Profesional",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Profesion_01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Profesional_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 206,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Profesional",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Profesion_v01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Profesional_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 207,
+          "Descripción Especialidad / Subespecialidad": "Retina y vítreo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Retina_Vitreo_01",
+          "Descripción Consultorio y Consecutivo": "Retina_y_vítreo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 208,
+          "Descripción Especialidad / Subespecialidad": "Retina y vítreo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Retina_Vitreo_v01",
+          "Descripción Consultorio y Consecutivo": "Retina_y_vítreo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 209,
+          "Descripción Especialidad / Subespecialidad": "Reumatología   ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reumatolog_01",
+          "Descripción Consultorio y Consecutivo": "Reumatología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 210,
+          "Descripción Especialidad / Subespecialidad": "Reumatología   ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reumatolog_v01",
+          "Descripción Consultorio y Consecutivo": "Reumatología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 211,
+          "Descripción Especialidad / Subespecialidad": "Reumatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reumatolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Reumatología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 212,
+          "Descripción Especialidad / Subespecialidad": "Reumatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Reumatolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Reumatología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 213,
+          "Descripción Especialidad / Subespecialidad": "Rodilla",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rodilla_01",
+          "Descripción Consultorio y Consecutivo": "Rodilla_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 214,
+          "Descripción Especialidad / Subespecialidad": "Rodilla",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rodilla_v01",
+          "Descripción Consultorio y Consecutivo": "Rodilla_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 215,
+          "Descripción Especialidad / Subespecialidad": "Salud Reproductiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Salud_Reproduct_01",
+          "Descripción Consultorio y Consecutivo": "Salud_Reproductiva_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 216,
+          "Descripción Especialidad / Subespecialidad": "Salud Reproductiva",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Salud_Reproduct_v01",
+          "Descripción Consultorio y Consecutivo": "Salud_Reproductiva_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 217,
+          "Descripción Especialidad / Subespecialidad": "Sarcomas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Sarcomas_01",
+          "Descripción Consultorio y Consecutivo": "Sarcomas_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 218,
+          "Descripción Especialidad / Subespecialidad": "Sarcomas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Sarcomas_v01",
+          "Descripción Consultorio y Consecutivo": "Sarcomas_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 219,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trabajo_Social_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 220,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trabajo_Social_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 221,
+          "Descripción Especialidad / Subespecialidad": "Trasplante de células madre Hematopoyéticas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Celul_Mad_Hem_01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_Celulas_Madre_Hematopoyeticas_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 222,
+          "Descripción Especialidad / Subespecialidad": "Trasplante de células madre Hematopoyéticas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Celul_Mad_Hem_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_Celulas_Madre_Hematopoyeticas_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 223,
+          "Descripción Especialidad / Subespecialidad": "Trasplante de piel y tendones",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Piel_Tend_01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_de_Piel_y_Tendones_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 224,
+          "Descripción Especialidad / Subespecialidad": "Trasplante de piel y tendones",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Piel_Tend_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_de_Piel_y_Tendones_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 225,
+          "Descripción Especialidad / Subespecialidad": "Trasplante óseo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Oseo_01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_Oseo_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 226,
+          "Descripción Especialidad / Subespecialidad": "Trasplante óseo",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Oseo_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplante_Oseo_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 227,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Corazón",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Coraz_01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Corazon_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 228,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Corazón",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Coraz_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Corazon_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 229,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Córnea",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Cornea_01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Cornea_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 230,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Córnea",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Cornea_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Cornea_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 231,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Hígado",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Higado_01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Higado_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 232,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Hígado",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Higado_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Higado_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 233,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Médula Ósea",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Medula_Osea_01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Medula_Osea_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 234,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Médula Ósea",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Medula_Osea_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Medula_Osea_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 235,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Riñón",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Rinon_01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Riñón_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 236,
+          "Descripción Especialidad / Subespecialidad": "Trasplantes Riñón",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trasplant_Rinon_v01",
+          "Descripción Consultorio y Consecutivo": "Trasplantes_Riñón_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 237,
+          "Descripción Especialidad / Subespecialidad": "Traumatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Traumatolog_01",
+          "Descripción Consultorio y Consecutivo": "Traumatología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 238,
+          "Descripción Especialidad / Subespecialidad": "Traumatología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Traumatolog_v01",
+          "Descripción Consultorio y Consecutivo": "Traumatología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 239,
+          "Descripción Especialidad / Subespecialidad": "Traumatología y ortopedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trauma_Ortoped_01",
+          "Descripción Consultorio y Consecutivo": "Trauma_y_Ortopedia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 240,
+          "Descripción Especialidad / Subespecialidad": "Traumatología y ortopedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trauma_Ortoped_v01",
+          "Descripción Consultorio y Consecutivo": "Trauma_y_Ortopedia_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 241,
+          "Descripción Especialidad / Subespecialidad": "Tumores Cabeza y Cuello",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumor_Cabeza_Cuello_01",
+          "Descripción Consultorio y Consecutivo": "Tumores_Cabeza_y_Cuello_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 242,
+          "Descripción Especialidad / Subespecialidad": "Tumores Cabeza y Cuello",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumor_Cabeza_Cuello_v01",
+          "Descripción Consultorio y Consecutivo": "Tumores_Cabeza_y_Cuello_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 243,
+          "Descripción Especialidad / Subespecialidad": "Tumores de Colon y Recto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumor_Colon_Recto_01",
+          "Descripción Consultorio y Consecutivo": "Tumores_de_Colon_y_Recto_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 244,
+          "Descripción Especialidad / Subespecialidad": "Tumores de Colon y Recto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumor_Colon_Recto_v01",
+          "Descripción Consultorio y Consecutivo": "Tumores_de_Colon_y_Recto_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 245,
+          "Descripción Especialidad / Subespecialidad": "Tumores Tórax",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumores_Torax_01",
+          "Descripción Consultorio y Consecutivo": "Tumores_Tórax_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 246,
+          "Descripción Especialidad / Subespecialidad": "Tumores Tórax",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Tumores_Torax_v01",
+          "Descripción Consultorio y Consecutivo": "Tumores_Tórax_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 247,
+          "Descripción Especialidad / Subespecialidad": "UCI Neonatos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "UCI_Neonat_01",
+          "Descripción Consultorio y Consecutivo": "UCI_Neonatos_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 248,
+          "Descripción Especialidad / Subespecialidad": "UCI Neonatos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "UCI_Neonat_v01",
+          "Descripción Consultorio y Consecutivo": "UCI_Neonatos_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 249,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Cuidad_Intens_01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Cuidados_Intensivos_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 250,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Cuidad_Intens_v01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Cuidados_Intensivos_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 251,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Quemados",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Quemados_01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Quemados_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 252,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Quemados",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Quemados_v01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Quemados_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 253,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Trasplantes",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Trasplant_01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Trasplantes_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 254,
+          "Descripción Especialidad / Subespecialidad": "Unidad de Trasplantes",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Trasplant_v01",
+          "Descripción Consultorio y Consecutivo": "Unidad_de_Trasplantes_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 255,
+          "Descripción Especialidad / Subespecialidad": "Unidad Metabólica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Metabolic_01",
+          "Descripción Consultorio y Consecutivo": "Unidad_Metabólica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 256,
+          "Descripción Especialidad / Subespecialidad": "Unidad Metabólica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Unidad_Metabolic_v01",
+          "Descripción Consultorio y Consecutivo": "Unidad_Metabólica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 257,
+          "Descripción Especialidad / Subespecialidad": "Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Urgencias_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_de_Urgencias_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 258,
+          "Descripción Especialidad / Subespecialidad": "Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Urgencias_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_de_Urgencias_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 259,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Área Reanimación",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Area_Reanim_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Area_Reaniminacion_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 260,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Área Reanimación",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Area_Reanim_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Area_Reaniminacion_01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 261,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observac_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 262,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observac_v01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 263,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación Intermedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observ_Interm_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_Intermedia_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 264,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación Intermedia",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observ_Interm_v01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_Intermedia_01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 265,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación Pediatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observac_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_Pediatria_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 266,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Observación Pediatría",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Observac_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Observacion_Pediatria_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 267,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Oftalmológicas ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Oftalmolog_01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Oftalmologicas_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 268,
+          "Descripción Especialidad / Subespecialidad": "Urgencias Oftalmológicas ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urg_Oftalmolog_v01",
+          "Descripción Consultorio y Consecutivo": "Urgencias_Oftalmologicas_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 269,
+          "Descripción Especialidad / Subespecialidad": "Uro Oncología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Oncolog_01",
+          "Descripción Consultorio y Consecutivo": "Urologia_Oncología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 270,
+          "Descripción Especialidad / Subespecialidad": "Uro Oncología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Oncolog_v01",
+          "Descripción Consultorio y Consecutivo": "Urologia_Oncología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 271,
+          "Descripción Especialidad / Subespecialidad": "Urología  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_01",
+          "Descripción Consultorio y Consecutivo": "Urología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 272,
+          "Descripción Especialidad / Subespecialidad": "Urología  ",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_v01",
+          "Descripción Consultorio y Consecutivo": "Urología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 273,
+          "Descripción Especialidad / Subespecialidad": "Urología Ginecológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Gineco_01",
+          "Descripción Consultorio y Consecutivo": "Urologia_Ginecologica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 274,
+          "Descripción Especialidad / Subespecialidad": "Urología Ginecológica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Gineco_v01",
+          "Descripción Consultorio y Consecutivo": "Urologia_Ginecologica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 275,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna Pediat",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Int_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_Pediat_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 276,
+          "Descripción Especialidad / Subespecialidad": "Medicina Interna Pediat",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Medicina_Int_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Medicina_Interna_Pediat_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 277,
+          "Descripción Especialidad / Subespecialidad": "Dermatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dermatolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Dermatología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 278,
+          "Descripción Especialidad / Subespecialidad": "Dermatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Dermatolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Dermatología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 279,
+          "Descripción Especialidad / Subespecialidad": "Escolares y Adolesc 6 a 17 años",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Escolar_Adolesc_6-17_01",
+          "Descripción Consultorio y Consecutivo": "Escolares_y_Adolesc_6_a_17_años_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 280,
+          "Descripción Especialidad / Subespecialidad": "Escolares y Adolesc 6 a 17 años",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Escolar_Adolesc_6-17_v01",
+          "Descripción Consultorio y Consecutivo": "Escolares_y_Adolesc_6_a_17_años_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 281,
+          "Descripción Especialidad / Subespecialidad": "Genética Pediatríca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Genet_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Genética_Pediatríca_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 282,
+          "Descripción Especialidad / Subespecialidad": "Genética Pediatríca",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Genet_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Genética_Pediatríca_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 283,
+          "Descripción Especialidad / Subespecialidad": "Salud Ment y Psiq Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Salud_Ment_Psiq_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Salud_Ment_y_Psiq_Ped_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 284,
+          "Descripción Especialidad / Subespecialidad": "Salud Ment y Psiq Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Salud_Ment_Psiq_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Salud_Ment_y_Psiq_Ped_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 285,
+          "Descripción Especialidad / Subespecialidad": "Preescolares 2 a 6 años",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Preescolar_2_6_01",
+          "Descripción Consultorio y Consecutivo": "Preescolares_2_a_6_años_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 286,
+          "Descripción Especialidad / Subespecialidad": "Preescolares 2 a 6 años",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Preescolar_2_6_v01",
+          "Descripción Consultorio y Consecutivo": "Preescolares_2_a_6_años_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 287,
+          "Descripción Especialidad / Subespecialidad": "Colón y Recto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Colon_Recto_01",
+          "Descripción Consultorio y Consecutivo": "Colón_y_Recto_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 288,
+          "Descripción Especialidad / Subespecialidad": "Colón y Recto",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Colon_Recto_v01",
+          "Descripción Consultorio y Consecutivo": "Colón_y_Recto_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 289,
+          "Descripción Especialidad / Subespecialidad": "Coloproctología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Coloproctolog_01",
+          "Descripción Consultorio y Consecutivo": "Coloproctología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 290,
+          "Descripción Especialidad / Subespecialidad": "Coloproctología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Coloproctolog_v01",
+          "Descripción Consultorio y Consecutivo": "Coloproctología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 291,
+          "Descripción Especialidad / Subespecialidad": "Psiquiatría Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psiquiat_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Psiquiatría_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 292,
+          "Descripción Especialidad / Subespecialidad": "Psiquiatría Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Psiquiat_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Psiquiatría_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 293,
+          "Descripción Especialidad / Subespecialidad": "Diáfisis",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Diafisis_01",
+          "Descripción Consultorio y Consecutivo": "Diáfisis_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 294,
+          "Descripción Especialidad / Subespecialidad": "Diáfisis",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Diafisis_v01",
+          "Descripción Consultorio y Consecutivo": "Diáfisis_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 295,
+          "Descripción Especialidad / Subespecialidad": "Fracturas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Fracturas_01",
+          "Descripción Consultorio y Consecutivo": "Fracturas_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 296,
+          "Descripción Especialidad / Subespecialidad": "Fracturas",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Fracturas_v01",
+          "Descripción Consultorio y Consecutivo": "Fracturas_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 297,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Cardiovascular Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cardiovasc_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Cardiovascular_Ped_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 298,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Cardiovascular Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Cardiovasc_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Cardiovascular_Ped_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 299,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Reconstructiva Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Reconst_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Reconstructiva_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 300,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Reconstructiva Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Reconst_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Reconstructiva_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 301,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Torác y Neumo Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Torax_Neumo_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Torác_y_Neumo_Ped_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 302,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Torác y Neumo Ped",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Torax_Neumo_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Torác_y_Neumo_Ped_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 303,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Gastroembrionaria",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Gastroembrion_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Gastroembrionaria_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 304,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Gastroembrionaria",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Gastroembrion_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Gastroembrionaria_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 305,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 306,
+          "Descripción Especialidad / Subespecialidad": "Oftalmología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Oftalmolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Oftalmología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 307,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ortoped_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Ortopedia_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 308,
+          "Descripción Especialidad / Subespecialidad": "Ortopedia Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Ortoped_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Ortopedia_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 309,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Maxilofacial Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Maxilofac_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Maxilofacial_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 310,
+          "Descripción Especialidad / Subespecialidad": "Cirugia Maxilofacial Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Cirug_Maxilofac_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Cirugia_Maxilofacial_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 311,
+          "Descripción Especialidad / Subespecialidad": "Traumatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Traumatolog_Ped_01",
+          "Descripción Consultorio y Consecutivo": "Traumatología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 312,
+          "Descripción Especialidad / Subespecialidad": "Traumatología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Traumatolog_Ped_v01",
+          "Descripción Consultorio y Consecutivo": "Traumatología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 313,
+          "Descripción Especialidad / Subespecialidad": "Urología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Pediat_01",
+          "Descripción Consultorio y Consecutivo": "Urología_Pediátrica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 314,
+          "Descripción Especialidad / Subespecialidad": "Urología Pediátrica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Urolog_Pediat_v01",
+          "Descripción Consultorio y Consecutivo": "Urología_Pediátrica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 315,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Atención Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_AtnC_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Atención_Continua_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 316,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Atención Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_AtnC_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Atención_Continua_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 317,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_Urg_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Urgencias_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 318,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_Urg_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Urgencias_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 319,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Admisión Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_AdmC_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Admisión_Continua_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 320,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Admisión Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_AdmC_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Admisión_Continua_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 321,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Tococirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_UTQ_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Tococirugía_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 322,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Tococirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_UTQ_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Tococirugía_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 323,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Hospitalización",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_Hosp_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Hospitalización_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 324,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Hospitalización",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_Hosp_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Hospitalización_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 325,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_UCI_01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Cuidados_Intensivos_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 326,
+          "Descripción Especialidad / Subespecialidad": "Nutrición y Dietetica Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Nut_y_Diet_UCI_v01",
+          "Descripción Consultorio y Consecutivo": "Nutrición_y_Dietetica_Cuidados_Intensivos_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 327,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Medicina Interna Cirug Gral",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Med_Int_Cirug_Gral_01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Medicina_Interna_Cirug_Gral_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 328,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Medicina Interna Cirug Gral",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Med_Int_Cirug_Gral_v01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Medicina_Interna_Cirug_Gral_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 329,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Neurología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Neurolog_01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Neurología_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 330,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Neurología",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Neurolog_v01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Neurología_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 331,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Ortopédica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Ortoped_01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Ortopédica_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 332,
+          "Descripción Especialidad / Subespecialidad": "Rehabilitación Ortopédica",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Rehab_Ortoped_v01",
+          "Descripción Consultorio y Consecutivo": "Rehabilitación_Ortopédica_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 333,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Especialidades",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Espec_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Especialidades_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 334,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Especialidades",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Espec_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Especialidades_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 335,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Medicina Familiar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Med_Fam_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Medicina_Familiar_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 336,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Medicina Familiar",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Med_Fam_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Medicina_Familiar_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 337,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Atención Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_AtnC_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Atención_Continua_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 338,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Atención Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_AtnC_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Atención_Continua_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 339,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Urg_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Urgencias_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 340,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Urg_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Urgencias_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 341,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Admisión Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_AdmC_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Admisión_Continua_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 342,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Admisión Continua",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_AdmC_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Admisión_Continua_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 343,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Tococirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UTQ_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Tococirugía_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 344,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Tococirugía",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UTQ_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Tococirugía_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 345,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Hospitalización",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Hospital_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Hospitalización_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 346,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Hospitalización",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_Hospital_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Hospitalización_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 347,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UCI_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Cuidados_Intensivos_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 348,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UCI_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Cuidados_Intensivos_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 349,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UCIN_01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Cuidados_Intensivos_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 350,
+          "Descripción Especialidad / Subespecialidad": "Trabajo Social Cuidados Intensivos",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Trab_Soc_UCIN_v01",
+          "Descripción Consultorio y Consecutivo": "Trabajo_Social_Cuidados_Intensivos_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        },
+        {
+          "__EMPTY": 351,
+          "Descripción Especialidad / Subespecialidad": "Atención Médica Continua Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Aten_Med_Con_Urg_01",
+          "Descripción Consultorio y Consecutivo": "Atención_Médica_Continua_Urgencias_01",
+          "Tipo Consultorio": "FISICO"
+        },
+        {
+          "__EMPTY": 352,
+          "Descripción Especialidad / Subespecialidad": "Atención Médica Continua Urgencias",
+          "Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)": "Aten_Med_Con_Urg_v01",
+          "Descripción Consultorio y Consecutivo": "Atención_Médica_Continua_Urgencias_v01",
+          "Tipo Consultorio": "VIRTUAL"
+        }
+      ];
+
       window.onload = function () {
-        const entidadesUnicas = [...new Set(HOSPITAL_DATA.map((h) => h.ENTIDAD))];
+        // 1. Entidades Federativas
+        const entidadesUnicas = [...new Set(HOSPITAL_DATA.map((h) => h.ENTIDAD))].sort((a, b) => a.localeCompare(b, 'es'));
         const selectEntidad = document.getElementById("entidad");
-        entidadesUnicas.sort().forEach((ent) => {
-          let opt = new Option(ent, ent);
-          selectEntidad.add(opt);
+        selectEntidad.innerHTML = `<option value="">Seleccione Entidad... (${entidadesUnicas.length})</option>`;
+        entidadesUnicas.forEach((ent, i) => {
+          selectEntidad.add(new Option(`${i + 1}. ${ent}`, ent));
         });
+
+        // 2. Cargar Especialidades Únicas
+        const specsUnicas = [...new Set(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]))].sort((a, b) => a.localeCompare(b, 'es'));
+        const selectEsp = document.getElementById("especialidad");
+        selectEsp.innerHTML = `<option value="">Seleccionar Especialidad... (${specsUnicas.length})</option>`;
+        specsUnicas.forEach((spec, index) => {
+          selectEsp.add(new Option(`${index + 1}. ${spec}`, spec));
+        });
+
+        // 3. Turnos (Orden alfabético e índices)
+        const turnos = ["MATUTINO", "VESPERTINO", "NOCTURNO", "JORNADA ACUMULADA"].sort((a, b) => a.localeCompare(b, 'es'));
+        const selectTurno = document.getElementById("turno");
+        selectTurno.innerHTML = `<option value="">Seleccionar Turno... (${turnos.length})</option>`;
+        turnos.forEach((t, i) => {
+          selectTurno.add(new Option(`${i + 1}. ${t}`, t));
+        });
+        
+        // Recalcular horarios si las horas de atención cambian
+        document.getElementById("h_ini_at").addEventListener('change', () => { calcularFinCita1(); calcularFinCita2(); });
+        document.getElementById("h_fin_at").addEventListener('change', () => { calcularFinCita1(); calcularFinCita2(); });
       };
+
+      function initTime(el) {
+        if (!el.value) el.value = "00:00";
+      }
+
+      function toggleCita2() {
+        const container = document.getElementById("cita-2-container");
+        const icon = document.getElementById("btn-cita2-icon");
+        if (container.style.display === "none") {
+          container.style.display = "block";
+          icon.textContent = "-";
+          document.getElementById("h_ini_cita2").value = document.getElementById("h_fin_cita").value;
+          calcularFinCita2();
+        } else {
+          container.style.display = "none";
+          icon.textContent = "+";
+          // Limpiar valores si se oculta
+          document.getElementById("h_ini_cita2").value = "";
+          document.getElementById("h_fin_cita2").value = "";
+        }
+      }
+
+      function timeToMinutes(timeStr) {
+        if (!timeStr) return 0;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+      }
+
+      function minutesToTime(totalMinutes) {
+        const hours = Math.floor(totalMinutes / 60) % 24;
+        const minutes = totalMinutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }
+
+      function calcularFinCita1() {
+        const h_ini_cita = get("h_ini_cita");
+        const intervalo = parseInt(get("intervalo"));
+        const h_fin_at = get("h_fin_at");
+
+        if (h_ini_cita && !isNaN(intervalo) && intervalo > 0) {
+          const inicioMin = timeToMinutes(h_ini_cita);
+          const finCalculadoMin = inicioMin + intervalo;
+          const finAtencionMin = timeToMinutes(h_fin_at);
+
+          if (h_fin_at && finCalculadoMin > finAtencionMin) {
+            alert("La Cita 1 excede el horario de atención. Ajustando al límite.");
+            document.getElementById("h_fin_cita").value = h_fin_at;
+          } else {
+            document.getElementById("h_fin_cita").value = minutesToTime(finCalculadoMin);
+          }
+        } else {
+          document.getElementById("h_fin_cita").value = "";
+        }
+
+        // Sincronizar el inicio de la Cita 2
+        document.getElementById("h_ini_cita2").value = document.getElementById("h_fin_cita").value;
+        if (document.getElementById("cita-2-container").style.display !== "none") {
+          calcularFinCita2();
+        }
+      }
+
+      function calcularFinCita2() {
+        const h_ini_cita2 = get("h_ini_cita2");
+        const intervalo2 = parseInt(get("intervalo2"));
+        const h_fin_at = get("h_fin_at");
+        const selectFinCita2 = document.getElementById("h_fin_cita2");
+
+        selectFinCita2.innerHTML = '<option value="">Seleccionar Fin...</option>';
+
+        if (h_ini_cita2 && !isNaN(intervalo2) && intervalo2 > 0) {
+          const inicioMin = timeToMinutes(h_ini_cita2);
+          const finAtencionMin = timeToMinutes(h_fin_at);
+
+          if (!h_fin_at) {
+            selectFinCita2.innerHTML = '<option value="">Define Fin Atención primero</option>';
+            return;
+          }
+
+          let currentMin = inicioMin + intervalo2;
+          let i = 1;
+
+          while (currentMin <= finAtencionMin) {
+            const timeStr = minutesToTime(currentMin);
+            const label = `${i} int. (${timeStr})`;
+            selectFinCita2.add(new Option(label, timeStr));
+            currentMin += intervalo2;
+            i++;
+          }
+          
+          if (selectFinCita2.options.length <= 1) {
+            selectFinCita2.innerHTML = '<option value="">Espacio insuficiente para intervalo</option>';
+          }
+        }
+      }
 
       function actualizarUnidades() {
         const entSel = document.getElementById("entidad").value;
+        const searchVal = document.getElementById("search-unidad")?.value.toLowerCase() || "";
         const selectUnidad = document.getElementById("unidad");
         const inputMunicipio = document.getElementById("municipio");
         const inputClues = document.getElementById("clues");
-        const inputCve = document.getElementById("cve");
 
-        selectUnidad.innerHTML =
-          '<option value="">Seleccione Unidad...</option>';
         inputMunicipio.value = "";
         inputClues.value = "";
-        // El CVE_PRESUPUESTAL se llena manualmente por el usuario.
 
-        if (!entSel) return;
+        if (!entSel) {
+          selectUnidad.innerHTML = '<option value="">Seleccione Unidad...</option>';
+          return;
+        }
 
-        // Solo unidades que correspondan a esa entidad.
-        // Value = CLUES (ID único). Texto visible = Nombre de la unidad.
+        let filteredHospitals = HOSPITAL_DATA.filter((h) => h.ENTIDAD === entSel);
+        if (searchVal) {
+          filteredHospitals = filteredHospitals.filter(h => 
+            (h["NOMBRE DE LA UNIDAD"] || "").toLowerCase().includes(searchVal)
+          );
+        }
+
         const unidadesUnicas = [
           ...new Map(
-            HOSPITAL_DATA.filter((h) => h.ENTIDAD === entSel).map((h) => [h.CLUES, h])
+            filteredHospitals.map((h) => [h.CLUES, h])
           ).values(),
-        ];
+        ].sort((a, b) => (a["NOMBRE DE LA UNIDAD"] || "").localeCompare(b["NOMBRE DE LA UNIDAD"] || "", "es"));
 
-        unidadesUnicas
-          .sort((a, b) =>
-            (a["NOMBRE DE LA UNIDAD"] || "").localeCompare(b["NOMBRE DE LA UNIDAD"] || "", "es"),
-          )
-          .forEach((h) => {
-            selectUnidad.add(
-              new Option(h["NOMBRE DE LA UNIDAD"] || "", h.CLUES)
-            );
-          });
+        selectUnidad.innerHTML = `<option value="">Seleccione Unidad... (${unidadesUnicas.length})</option>`;
+        unidadesUnicas.forEach((h, i) => {
+          selectUnidad.add(new Option(`${i + 1}. ${h["NOMBRE DE LA UNIDAD"]}`, h.CLUES));
+        });
       }
 
       // Cuando cambie la unidad médica en la pestaña Hospital, se autocompleta Municipio y CLUES.
@@ -4935,12 +7719,95 @@
         inputClues.value = h.CLUES;
       }
 
+      function eliminarRegistro(idx) {
+        if (confirm("¿Seguro que deseas eliminar este registro?")) {
+          if (tipo === "operativo") registrosHO.splice(idx, 1);
+          else registrosAdmin.splice(idx, 1);
+          renderTabla();
+        }
+      }
+
+      function editarRegistro(idx) {
+        editIndex = idx;
+        const data = (tipo === "operativo") ? registrosHO[idx] : registrosAdmin[idx];
+        
+        // Pintar bordes en rojo para indicar edición
+        document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.add('editing-field'));
+        document.getElementById("btn-cancelar-edit").style.display = "block";
+        
+        if (tipo === "operativo") {
+          // Cargar datos al formulario (basado en el orden de la fila de registrosHO)
+          document.getElementById("clave").value = data[8];
+          document.getElementById("nombre").value = data[9];
+          document.getElementById("apellido").value = data[10];
+          document.getElementById("apellido2").value = data[11];
+          document.getElementById("especialidad").value = data[5];
+          document.getElementById("tipo_consultorio").value = data[30] || "FISICO";
+          actualizarNomenclaturas();
+          
+          // Esperar un momento a que el select de nomenclatura se llene
+          setTimeout(() => {
+            document.getElementById("nomenclatura").value = data[6];
+          }, 50);
+
+          document.getElementById("consultorio").value = data[7] || "";
+          document.getElementById("titular").checked = (data[12] === "Sí");
+          document.getElementById("h_ini_at").value = data[13];
+          document.getElementById("h_fin_at").value = data[14];
+          document.getElementById("turno").value = data[7];
+          document.getElementById("h_ini_cita").value = data[15];
+          document.getElementById("intervalo").value = data[17];
+          calcularFinCita1();
+          // Sincronizar checkboxes de días... (puedes agregar lógica para row[23] a row[29])
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelarEdicion() {
+        editIndex = -1;
+        document.querySelectorAll('.editing-field').forEach(el => el.classList.remove('editing-field'));
+        document.getElementById("btn-cancelar-edit").style.display = "none";
+        limpiarCampos();
+      }
+
+      // Asegurarse de que los cálculos de horarios se activen al cargar la página si hay valores preexistentes
+      document.addEventListener('DOMContentLoaded', () => {
+        calcularFinCita1();
+      });
+
+      function actualizarNomenclaturas() {
+        const specSel = document.getElementById("especialidad").value;
+        const tipoSel = document.getElementById("tipo_consultorio").value;
+        const selectNom = document.getElementById("nomenclatura");
+        
+        if (!specSel) {
+          selectNom.innerHTML = '<option value="">Esperando especialidad...</option>';
+          return;
+        }
+
+        const filtered = SPECIALTY_DATA.filter(x => 
+          x["Descripción Especialidad / Subespecialidad"] === specSel && 
+          x["Tipo Consultorio"] === tipoSel
+        );
+
+        selectNom.innerHTML = `<option value="">Seleccionar Nomenclatura... (${filtered.length})</option>`;
+        filtered.forEach((item, i) => {
+          const nomCode = item["Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)"];
+          selectNom.add(new Option(`${i + 1}. ${nomCode}`, nomCode));
+        });
+
+        if (filtered.length === 1) {
+          selectNom.selectedIndex = 1;
+        }
+      }
+
       function switchView(v) {
         document
           .querySelectorAll(".tab-btn")
           .forEach((b) => b.classList.remove("active"));
 
         if (v === "hospital") {
+          tipo = "hospital";
           document
             .querySelectorAll(".view")
             .forEach((v) => v.classList.remove("active"));
@@ -4970,6 +7837,9 @@
         document.getElementById("field-titular").style.display = isOp
           ? "block"
           : "none";
+        document.getElementById("field-nomenclatura").style.display = isOp
+          ? "block"
+          : "none";
         document.getElementById("field-curp").style.display = isOp
           ? "none"
           : "block";
@@ -4983,15 +7853,19 @@
           ? "none"
           : "flex";
 
+        document.getElementById("seccion-especialidad").style.display = isOp ? "block" : "none";
+        document.getElementById("horarios").style.display = isOp ? "block" : "none";
+
         document.getElementById("lbl-nombre").textContent = isOp
           ? "NOMBRE"
           : "Nombre";
-        document.getElementById("lbl-apellido").textContent = isOp
-          ? "APELIDO PATERNO"
+        document.getElementById("lbl-apellido").textContent = isOp 
+          ? "APELLIDO PATERNO" 
           : "APELLIDO";
         document.getElementById("lbl-apellido2").textContent = isOp
           ? "APELLIDO MATERNO"
           : "2DO APELLIDO";
+        renderTabla();
       }
 
       function get(id) {
@@ -5002,6 +7876,91 @@
       }
 
       function guardar() {
+        const unitVal = get("unidad");
+        const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
+        const unitName = hObj["NOMBRE DE LA UNIDAD"] || "";
+        let valid = true;
+
+        // 1. Identificar campos obligatorios
+        const mandatory = ["nombre", "apellido", "apellido2"];
+        if (tipo === "operativo") mandatory.push("clave", "especialidad", "tipo_consultorio", "nomenclatura", "consultorio", "h_ini_at", "h_fin_at", "turno", "h_ini_cita", "h_fin_cita", "intervalo");
+        else mandatory.push("curp");
+
+        // 2. Limpiar estilos previos y validar
+        document.querySelectorAll('.editing-field').forEach(el => el.classList.remove('editing-field'));
+        
+        mandatory.forEach(id => {
+          const el = document.getElementById(id);
+          if (!get(id)) {
+            if (el) el.classList.add('editing-field'); // Se pone rojo
+            valid = false;
+          }
+        });
+
+        if (!valid) {
+          alert("Por favor, completa los campos marcados en rojo.");
+          return;
+        }
+
+        // Validación de Horarios (Solo Operativo)
+        if (tipo === "operativo") {
+            const h_ini_at = get("h_ini_at");
+            const h_fin_at = get("h_fin_at");
+            const h_ini_cita = get("h_ini_cita");
+            const h_fin_cita = get("h_fin_cita");
+
+            if (!h_ini_at || !h_fin_at || !h_ini_cita || !h_fin_cita) {
+                alert("Por favor completa todos los campos de horario.");
+                return;
+            }
+          
+          // Validar que hora de inicio no sea mayor que hora de fin para atención
+          if (timeToMinutes(h_ini_at) >= timeToMinutes(h_fin_at)) {
+            alert("La HORA DE INICIO DE ATENCIÓN no puede ser igual o posterior a la HORA DE FIN DE ATENCIÓN.");
+            return;
+          }
+
+          // Validar que hora de inicio no sea mayor que hora de fin para Cita 1
+          if (timeToMinutes(h_ini_cita) >= timeToMinutes(h_fin_cita)) {
+            alert("La HORA DE INICIO DE CITA 1 no puede ser igual o posterior a la HORA DE FIN DE CITA 1.");
+            return;
+          }
+
+            if (h_ini_cita < h_ini_at || h_fin_cita > h_fin_at) {
+                alert("¡Error! El horario de la CITA debe estar comprendido dentro del Horario de ATENCIÓN.");
+                return;
+            }
+
+            // Validar Horario 2 si está visible
+            if (document.getElementById("cita-2-container").style.display !== "none") {
+              const h_ini_cita2 = get("h_ini_cita2");
+              const h_fin_cita2 = get("h_fin_cita2");
+
+              if (!h_ini_cita2 || !h_fin_cita2) {
+                alert("Por favor completa todos los campos del Horario de Cita 2.");
+                return;
+              }
+
+              // Validar que hora de inicio no sea mayor que hora de fin para Cita 2
+              if (timeToMinutes(h_ini_cita2) >= timeToMinutes(h_fin_cita2)) {
+                alert("La HORA DE INICIO DE CITA 2 no puede ser igual o posterior a la HORA DE FIN DE CITA 2.");
+                return;
+              }
+
+              if (h_ini_cita2 && h_fin_cita2) { // Solo si ambos están llenos
+                if (h_ini_cita2 < h_ini_at || h_fin_cita2 > h_fin_at) {
+                  alert("¡Error! El segundo horario de CITA debe estar comprendido dentro del Horario de ATENCIÓN.");
+                  return;
+                }
+                // Validar que Cita 1 y Cita 2 no se solapen
+                if (h_ini_cita2 < h_fin_cita && h_fin_cita2 > h_ini_cita) {
+                  alert("¡Error! Los horarios de Cita 1 y Cita 2 se solapan.");
+                  return;
+                }
+              }
+            }
+        }
+
         if (tipo === "administrativo") {
           if (get("curp").length !== 18) {
             alert("CURP debe tener 18 caracteres");
@@ -5020,83 +7979,225 @@
             alert("Debes seleccionar al menos un rol");
             return;
           }
+
+          const fila = [
+            get("entidad"),
+            document.getElementById("municipio").value,
+            document.getElementById("cve").value,
+            document.getElementById("clues").value,
+            unitName,
+            "", // Clave Empleado vacío para admin en su estructura
+            get("nombre"),
+            get("apellido"),
+            get("apellido2"),
+            get("curp"),
+            "", // Titular vacío para admin
+            check("role_asistente"),
+            check("role_admin"),
+            check("role_director"),
+            check("role_jefe"),
+            check("role_agenda"),
+          ];
+          registrosAdmin.push(fila);
+        } else {
+          // Operativo
+          const espLabel = get("especialidad");
+          const unitVal = get("unidad");
+          const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
+          const unitName = hObj["NOMBRE DE LA UNIDAD"] || "";
+
+          const fila = [
+            get("entidad"),
+            document.getElementById("municipio").value,
+            document.getElementById("cve").value,
+            document.getElementById("clues").value,
+            unitName,
+            espLabel,
+            get("nomenclatura"),
+            get("consultorio"),
+            get("turno"),
+            get("clave"),
+            get("nombre"),
+            get("apellido"),
+            get("apellido2"),
+            check("titular"),
+            get("h_ini_at"),
+            get("h_fin_at"),
+            get("h_ini_cita"),
+            get("h_fin_cita"),
+            get("intervalo"),
+            "PRIMERA VEZ",
+            get("h_ini_cita2"),
+            get("h_fin_cita2"),
+            get("intervalo2"),
+            get("h_ini_cita2") ? "SUBSECUENTE" : "",
+            check("lunes"),
+            check("martes"),
+            check("miercoles"),
+            check("jueves"),
+            check("viernes"),
+            check("sabado"),
+            check("domingo"),
+            get("tipo_consultorio")
+          ];
+          
+          if (editIndex > -1) {
+            registrosHO[editIndex] = fila;
+            alert("Registro actualizado correctamente");
+          } else {
+            registrosHO.push(fila);
+            alert("Guardado correctamente");
+          }
         }
 
-        registros.push([
-          get("entidad"),
-          document.getElementById("municipio").value,
-          document.getElementById("cve").value,
-          document.getElementById("clues").value,
-          get("unidad"),
-          get("clave"),
-          get("nombre"),
-          get("apellido"),
-          get("apellido2"),
-          get("curp"),
-          get("titular"),
-          check("role_asistente"),
-          check("role_admin"),
-          check("role_director"),
-          check("role_jefe"),
-          check("role_agenda"),
-        ]);
-
-        alert("Guardado correctamente");
+        cancelarEdicion();
         limpiarCampos();
+        renderTabla();
+      }
+
+      // Guardar hospital y pasar a operativo sin que se mezcle con administrativos
+      function confirmarHospital() {
+        // Validación mínima: debe existir entidad/unidad/clues/cve
+        if (!get("entidad") || !get("unidad")) {
+          alert("Selecciona Entidad y Unidad");
+          return;
+        }
+
+        // Cambiar a operativo
+        switchView("operativo");
+
+        // Preparar para que el usuario capture el personal operativo
+        // (no limpiamos municipio/clues/cve, para que conserve el hospital)
+        document.getElementById("clave").value = "";
+        document.getElementById("nombre").value = "";
+        document.getElementById("apellido").value = "";
+        document.getElementById("apellido2").value = "";
+        document.getElementById("titular").checked = false;
+
+        document.querySelectorAll('#roles input[type="checkbox"]').forEach((c) => (c.checked = false));
       }
 
       function limpiarCampos() {
         const ids = [
+          "especialidad",
+          "tipo_consultorio",
+          "nomenclatura",
+          "consultorio",
+          "turno",
           "clave",
           "nombre",
           "apellido",
           "apellido2",
           "curp",
           "titular",
+          "h_ini_at",
+          "h_fin_at",
+          "h_ini_cita",
+          "h_fin_cita",
+          "intervalo",
+          "ocasion"
         ];
         ids.forEach((id) => {
           const el = document.getElementById(id);
-          if (el.tagName === "SELECT") el.selectedIndex = 0;
-          else el.value = "";
+          if (el) {
+            if (el.tagName === "SELECT") el.selectedIndex = 0;
+            else el.value = "";
+          }
         });
         document
-          .querySelectorAll('#roles input[type="checkbox"]')
+          .querySelectorAll('#roles input[type="checkbox"], #horarios input[type="checkbox"], #titular')
           .forEach((c) => (c.checked = false));
+        
+        document.getElementById("cita-2-container").style.display = "none";
+        document.getElementById("btn-cita2-icon").textContent = "+";
       }
 
       function descargar() {
-        if (registros.length === 0) {
-          alert("No hay datos");
+        if (registrosHO.length === 0 && registrosAdmin.length === 0) {
+          alert("No hay datos para descargar");
           return;
         }
-        const headers = [
-          "Entidad Federativa",
-          "Municipio",
-          "CVE_PRESUPUESTAL",
-          "CLUES",
-          "Nombre Unidad Medica",
-          "Clave Empleado",
-          "Nombre",
-          "Apellido",
-          "2do Apellido",
-          "CURP",
-          "Titular",
-          "Asistente medica",
-          "Administrador de catalogo",
-          "Director",
-          "Jefe de servicios",
-          "Agenda de citas",
-        ];
 
-        let csv =
-          headers.join(",") +
-          "\n" +
-          registros.map((r) => r.join(",")).join("\n");
+        const entidad = get("entidad");
+        const unitVal = get("unidad");
+        const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
+        const nombreHosp = hObj["NOMBRE DE LA UNIDAD"] || "Hospital";
 
-        let a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob(["\ufeff" + csv]));
-        a.download = "agenda.csv";
-        a.click();
+        const wb = XLSX.utils.book_new();
+
+        const headersHO = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Especialidad", "Nomenclatura Consultorio", "Nombre del Consultorio", "Turno", "Clave Empleado", "NOMBRE", "APELLIDO PATERNO", "APELLIDO MATERNO", "TITULAR", "HORA_INICIO_ATENCION", "HORA_FIN_ATENCION", "CITA1_INI", "CITA1_FIN", "CITA1_INT", "CITA1_OCASION", "CITA2_INI", "CITA2_FIN", "CITA2_INT", "CITA2_OCASION", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO", "TIPO_CONSULTORIO"];
+        const wsHO = XLSX.utils.aoa_to_sheet([headersHO, ...registrosHO]);
+        XLSX.utils.book_append_sheet(wb, wsHO, "Operativo");
+
+        const headersAdmin = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Clave Empleado", "Nombre", "Apellido", "2do Apellido", "CURP", "Titular", "Asistente medica", "Administrador de catalogo", "Director", "Jefe de servicios", "Agenda de citas"];
+        const wsAdmin = XLSX.utils.aoa_to_sheet([headersAdmin, ...registrosAdmin]);
+        XLSX.utils.book_append_sheet(wb, wsAdmin, "Administrativo");
+
+        XLSX.writeFile(wb, `${entidad} - ${nombreHosp}.xlsx`);
+      }
+
+      function renderTabla() {
+        const container = document.getElementById("tabla-registros-container");
+        const data = (tipo === "administrativo") ? registrosAdmin : registrosHO;
+        const esAdmin = (tipo === "administrativo");
+        
+        if (data.length === 0) {
+          container.innerHTML = "<p style='text-align:center; color:#6c757d; margin-top:20px;'>No hay registros guardados.</p>";
+          return;
+        }
+
+        let html = `<h4 class="mt-4 mb-3">Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}</h4>`;
+        html += "<table><thead><tr>";
+        let displayHeaders = [];
+        if (esAdmin) {
+          displayHeaders = ["CURP", "Nombre", "Apellido", "Privs", "Acciones"];
+        } else {
+          displayHeaders = ["Clave", "Nombre", "Especialidad", "Nomenclatura", "Consultorio", "Turno", "Atención", "Cita 1 (PV)", "Cita 2 (Sub)", "Días", "Acciones"];
+        }
+        
+        displayHeaders.forEach(h => html += `<th>${h}</th>`);
+        html += "</tr></thead><tbody>";
+
+        data.forEach((row, idx) => {
+          let extra = "";
+          if (esAdmin) {
+            let privs = [];
+            if(row[11] === "Sí") privs.push("Asist");
+            if(row[12] === "Sí") privs.push("Admin");
+            if(row[13] === "Sí") privs.push("Dir");
+            if(row[14] === "Sí") privs.push("Jefe");
+            if(row[15] === "Sí") privs.push("Agen");
+            extra = privs.join(",") || "No";
+          } else {
+            // Resumen de días con recuadros rojos (Indices 24-30 en Operativo)
+            const dLetras = ["L", "M", "Mi", "J", "V", "S", "D"];
+            let badges = "";
+            [24, 25, 26, 27, 28, 29, 30].forEach((col, i) => {
+              if(row[col] === "Sí") {
+                badges += `<span class="badge bg-danger" style="margin-right: 2px;">${dLetras[i]}</span>`;
+              }
+            });
+            extra = badges;
+          }
+          
+          const btnHtml = `
+            <td>
+              <button class="btn-sm-action" style="background:#0d6efd" onclick="editarRegistro(${idx})">Editar</button>
+              <button class="btn-sm-action" style="background:#dc3545" onclick="eliminarRegistro(${idx})">Borrar</button>
+            </td>`;
+          
+          if (esAdmin) {
+            html += `<tr><td>${row[9]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${extra}</td>${btnHtml}</tr>`;
+          } else {
+            // Operativo: Clave(9), Nombre(10), Especialidad(5), Nomenclatura(6), Consultorio(7), Turno(8), Atención(14-15), Cita1(16-18), Cita2(20-22), Días(24-30)
+            const atencion = `${row[14]}-${row[15]}`;
+            const c1 = `${row[16]}-${row[17]} (${row[18]}m)`;
+            const c2 = row[20] ? `${row[20]}-${row[21]} (${row[22]}m)` : "-";
+            html += `<tr><td>${row[9]}</td><td>${row[10]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${atencion}</td><td>${c1}</td><td>${c2}</td><td>${extra}</td>${btnHtml}</tr>`;
+          }
+        });
+        html += "</tbody></table>";
+        container.innerHTML = html;
       }
     </script>
   </body>
