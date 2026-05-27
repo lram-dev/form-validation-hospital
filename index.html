@@ -418,6 +418,10 @@
                 <label class="form-label">Clave Empleado *</label>
                 <input id="clave" class="form-control" />
               </div>
+              <div id="field-matricula" class="col-3">
+                <label class="form-label">Matrícula *</label>
+                <input id="matricula" class="form-control" />
+              </div>
               <div id="field-curp" class="col-3" style="display: none">
                 <label class="form-label">CURP</label>
                 <input id="curp" maxlength="18" class="form-control" placeholder="18 caracteres" />
@@ -445,6 +449,7 @@
             <div class="row">
               <div id="field-especialidad" class="col-4">
                 <label class="form-label">Especialidad *</label>
+                <input type="text" id="search-especialidad" class="form-control mb-2" placeholder="🔍 Buscar especialidad..." onkeyup="filtrarEspecialidades()">
                 <select id="especialidad" class="form-select" onchange="actualizarNomenclaturas()">
                   <option value="">Seleccionar...</option>
                 </select>
@@ -511,7 +516,7 @@
               </div>
               <div class="col-3">
                 <label class="form-label">Fin *</label>
-                <input type="time" id="h_fin_cita" class="form-control" onfocus="initTime(this)" readonly step="60" />
+                <select id="h_fin_cita" class="form-select" onchange="syncCita2Inicio()"></select>
               </div>
               <div class="col-3">
                 <label class="form-label">Ocasión de Servicio</label>
@@ -7546,12 +7551,7 @@
         });
 
         // 2. Cargar Especialidades Únicas
-        const specsUnicas = [...new Set(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]))].sort((a, b) => a.localeCompare(b, 'es'));
-        const selectEsp = document.getElementById("especialidad");
-        selectEsp.innerHTML = `<option value="">Seleccionar Especialidad... (${specsUnicas.length})</option>`;
-        specsUnicas.forEach((spec, index) => {
-          selectEsp.add(new Option(`${index + 1}. ${spec}`, spec));
-        });
+        filtrarEspecialidades();
 
         // 3. Turnos (Orden alfabético e índices)
         const turnos = ["MATUTINO", "VESPERTINO", "NOCTURNO", "JORNADA ACUMULADA"].sort((a, b) => a.localeCompare(b, 'es'));
@@ -7603,24 +7603,38 @@
         const h_ini_cita = get("h_ini_cita");
         const intervalo = parseInt(get("intervalo"));
         const h_fin_at = get("h_fin_at");
+        const selectFinCita = document.getElementById("h_fin_cita");
+
+        selectFinCita.innerHTML = '<option value="">Seleccionar Fin...</option>';
 
         if (h_ini_cita && !isNaN(intervalo) && intervalo > 0) {
           const inicioMin = timeToMinutes(h_ini_cita);
-          const finCalculadoMin = inicioMin + intervalo;
           const finAtencionMin = timeToMinutes(h_fin_at);
 
-          if (h_fin_at && finCalculadoMin > finAtencionMin) {
-            alert("La Cita 1 excede el horario de atención. Ajustando al límite.");
-            document.getElementById("h_fin_cita").value = h_fin_at;
-          } else {
-            document.getElementById("h_fin_cita").value = minutesToTime(finCalculadoMin);
+          if (!h_fin_at) return;
+
+          let currentMin = inicioMin + intervalo;
+          let i = 1;
+
+          while (currentMin <= finAtencionMin) {
+            const timeStr = minutesToTime(currentMin);
+            const label = `${i} int. (${timeStr})`;
+            selectFinCita.add(new Option(label, timeStr));
+            currentMin += intervalo;
+            i++;
           }
-        } else {
-          document.getElementById("h_fin_cita").value = "";
+          
+          if (selectFinCita.options.length <= 1) {
+            selectFinCita.innerHTML = '<option value="">Espacio insuficiente</option>';
+          }
         }
 
-        // Sincronizar el inicio de la Cita 2
-        document.getElementById("h_ini_cita2").value = document.getElementById("h_fin_cita").value;
+        syncCita2Inicio();
+      }
+
+      function syncCita2Inicio() {
+        const finCita1 = get("h_fin_cita");
+        document.getElementById("h_ini_cita2").value = finCita1;
         if (document.getElementById("cita-2-container").style.display !== "none") {
           calcularFinCita2();
         }
@@ -7719,6 +7733,23 @@
         inputClues.value = h.CLUES;
       }
 
+      function filtrarEspecialidades() {
+        const searchVal = document.getElementById("search-especialidad")?.value.toLowerCase() || "";
+        const selectEsp = document.getElementById("especialidad");
+        
+        // Obtener lista base de especialidades únicas
+        const specsUnicas = [...new Set(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]))].sort((a, b) => a.localeCompare(b, 'es'));
+        
+        // Filtrar por texto
+        const filtered = specsUnicas.filter(spec => spec.toLowerCase().includes(searchVal));
+        
+        // Re-llenar el select
+        selectEsp.innerHTML = `<option value="">Seleccionar Especialidad... (${filtered.length})</option>`;
+        filtered.forEach((spec, i) => {
+          selectEsp.add(new Option(`${i + 1}. ${spec}`, spec));
+        });
+      }
+
       function eliminarRegistro(idx) {
         if (confirm("¿Seguro que deseas eliminar este registro?")) {
           if (tipo === "operativo") registrosHO.splice(idx, 1);
@@ -7730,6 +7761,7 @@
       function editarRegistro(idx) {
         editIndex = idx;
         const data = (tipo === "operativo") ? registrosHO[idx] : registrosAdmin[idx];
+        if (!data) return;
         
         // Pintar bordes en rojo para indicar edición
         document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.add('editing-field'));
@@ -7882,7 +7914,7 @@
         let valid = true;
 
         // 1. Identificar campos obligatorios
-        const mandatory = ["nombre", "apellido", "apellido2"];
+        const mandatory = ["nombre", "apellido", "apellido2", "matricula"];
         if (tipo === "operativo") mandatory.push("clave", "especialidad", "tipo_consultorio", "nomenclatura", "consultorio", "h_ini_at", "h_fin_at", "turno", "h_ini_cita", "h_fin_cita", "intervalo");
         else mandatory.push("curp");
 
@@ -7987,6 +8019,7 @@
             document.getElementById("clues").value,
             unitName,
             "", // Clave Empleado vacío para admin en su estructura
+            get("matricula"),
             get("nombre"),
             get("apellido"),
             get("apellido2"),
@@ -8017,6 +8050,7 @@
             get("consultorio"),
             get("turno"),
             get("clave"),
+            get("matricula"),
             get("nombre"),
             get("apellido"),
             get("apellido2"),
@@ -8078,6 +8112,11 @@
       }
 
       function limpiarCampos() {
+        if(document.getElementById("search-unidad")) document.getElementById("search-unidad").value = "";
+        if(document.getElementById("search-especialidad")) document.getElementById("search-especialidad").value = "";
+        actualizarUnidades();
+        filtrarEspecialidades();
+
         const ids = [
           "especialidad",
           "tipo_consultorio",
@@ -8085,6 +8124,7 @@
           "consultorio",
           "turno",
           "clave",
+          "matricula",
           "nombre",
           "apellido",
           "apellido2",
@@ -8150,9 +8190,9 @@
         html += "<table><thead><tr>";
         let displayHeaders = [];
         if (esAdmin) {
-          displayHeaders = ["CURP", "Nombre", "Apellido", "Privs", "Acciones"];
+          displayHeaders = ["Matrícula", "CURP", "Nombre", "Apellido", "Privs", "Acciones"];
         } else {
-          displayHeaders = ["Clave", "Nombre", "Especialidad", "Nomenclatura", "Consultorio", "Turno", "Atención", "Cita 1 (PV)", "Cita 2 (Sub)", "Días", "Acciones"];
+          displayHeaders = ["Clave", "Matrícula", "Nombre", "Especialidad", "Nomenclatura", "Consultorio", "Turno", "Atención", "Cita 1 (PV)", "Cita 2 (Sub)", "Días", "Acciones"];
         }
         
         displayHeaders.forEach(h => html += `<th>${h}</th>`);
@@ -8162,17 +8202,17 @@
           let extra = "";
           if (esAdmin) {
             let privs = [];
-            if(row[11] === "Sí") privs.push("Asist");
-            if(row[12] === "Sí") privs.push("Admin");
-            if(row[13] === "Sí") privs.push("Dir");
-            if(row[14] === "Sí") privs.push("Jefe");
-            if(row[15] === "Sí") privs.push("Agen");
+            if(row[12] === "Sí") privs.push("Asist");
+            if(row[13] === "Sí") privs.push("Admin");
+            if(row[14] === "Sí") privs.push("Dir");
+            if(row[15] === "Sí") privs.push("Jefe");
+            if(row[16] === "Sí") privs.push("Agen");
             extra = privs.join(",") || "No";
           } else {
-            // Resumen de días con recuadros rojos (Indices 24-30 en Operativo)
+            // Resumen de días con recuadros rojos (Índices 25-31 en Operativo)
             const dLetras = ["L", "M", "Mi", "J", "V", "S", "D"];
             let badges = "";
-            [24, 25, 26, 27, 28, 29, 30].forEach((col, i) => {
+            [25, 26, 27, 28, 29, 30, 31].forEach((col, i) => {
               if(row[col] === "Sí") {
                 badges += `<span class="badge bg-danger" style="margin-right: 2px;">${dLetras[i]}</span>`;
               }
@@ -8187,13 +8227,13 @@
             </td>`;
           
           if (esAdmin) {
-            html += `<tr><td>${row[9]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${extra}</td>${btnHtml}</tr>`;
+            html += `<tr><td>${row[6]}</td><td>${row[10]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${extra}</td>${btnHtml}</tr>`;
           } else {
-            // Operativo: Clave(9), Nombre(10), Especialidad(5), Nomenclatura(6), Consultorio(7), Turno(8), Atención(14-15), Cita1(16-18), Cita2(20-22), Días(24-30)
-            const atencion = `${row[14]}-${row[15]}`;
-            const c1 = `${row[16]}-${row[17]} (${row[18]}m)`;
-            const c2 = row[20] ? `${row[20]}-${row[21]} (${row[22]}m)` : "-";
-            html += `<tr><td>${row[9]}</td><td>${row[10]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${atencion}</td><td>${c1}</td><td>${c2}</td><td>${extra}</td>${btnHtml}</tr>`;
+            // Operativo: Clave(9), Matrícula(10), Nombre(11), Especialidad(5), Nomenclatura(6), Consultorio(7), Turno(8), Atención(15-16), Cita1(17-18), Cita2(21-23), Días(25-31)
+            const atencion = `${row[15]}-${row[16]}`;
+            const c1 = `${row[17]}-${row[18]} (${row[19]}m)`;
+            const c2 = row[21] ? `${row[21]}-${row[22]} (${row[23]}m)` : "-";
+            html += `<tr><td>${row[9]}</td><td>${row[10]}</td><td>${row[11]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${atencion}</td><td>${c1}</td><td>${c2}</td><td>${extra}</td>${btnHtml}</tr>`;
           }
         });
         html += "</tbody></table>";
