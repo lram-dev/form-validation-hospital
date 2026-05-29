@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agenda Médica</title>
 
+  <!-- Librería XLSX (Recomendamos descargar este archivo y ponerlo localmente si no hay internet) -->
+  <script src="xlsx.full.min.js"></script>
+
   <style>
     :root {
       --bs-primary: #0d6efd;
@@ -729,8 +732,7 @@
           + Nuevo Registro
         </button>
         <button id="btn-cargar-excel" class="btn btn-secondary"
-          style="width: auto; background-color: #198754; border-color: #198754;"
-          onclick="document.getElementById('excel-input').click()">
+          style="width: auto; background-color: #198754; border-color: #198754;" onclick="prepararCargaExcel()">
           <svg width="14" height="14" fill="currentColor" style="margin-right: 5px" viewBox="0 0 16 16">
             <path
               d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z" />
@@ -742,6 +744,10 @@
         <button class="btn btn-secondary" style="width: auto; background-color: #6f42c1; border-color: #6f42c1;"
           onclick="agregarRegistroDemo()">
           🎁 Demo Random
+        </button>
+        <button id="btn-limpiar-carga" class="btn btn-danger" style="width: auto; display:none;"
+          onclick="limpiarCargaPendiente()">
+          🗑️ Limpiar Carga Excel
         </button>
         <input type="file" id="excel-input" style="display: none;" accept=".xlsx, .xls"
           onchange="procesarExcelCarga(this)">
@@ -1103,9 +1109,12 @@
     // Guardamos Hospital/Operativo y Administrativo por separado
     let registrosHO = [];
     let registrosAdmin = [];
+    let registrosPendientes = []; // Mesa de trabajo para Excel
     let editIndex = -1; // Índice para saber si estamos editando
+    let pendingIndex = -1; // Índice si viene de la tabla de carga
     let tipo = "operativo";
     let lastAddedRef = null; // Referencia para resaltar el último registro
+    let vistaActualTabla = "normal"; // 'normal' o 'carga'
 
     // Variables para paginación y búsqueda
     let currentPage = 1;
@@ -8397,6 +8406,7 @@
 
     function editarRegistro(idx) {
       editIndex = idx;
+      pendingIndex = -1;
       const data = (tipo === "operativo") ? registrosHO[idx] : registrosAdmin[idx];
       if (!data) return;
 
@@ -8473,8 +8483,34 @@
       toggleFormulario(true);
     }
 
+    function completarRegistroCarga(idx) {
+      const data = registrosPendientes[idx];
+      pendingIndex = idx;
+      editIndex = -1;
+
+      // Limpiar campos y precargar lo del Excel
+      limpiarCampos();
+
+      if (tipo === "operativo") {
+        const setVal = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.value = (val === "REVISAR") ? "" : val;
+        };
+        setVal("matricula", data.curp);
+        setVal("nombre", data.nombre);
+        setVal("apellido", data.paterno);
+        setVal("apellido2", data.materno);
+        setVal("especialidad", data.especialidad);
+        actualizarNomenclaturas();
+      }
+
+      validarCURPs();
+      toggleFormulario(true);
+    }
+
     function cancelarEdicion() {
       editIndex = -1;
+      pendingIndex = -1;
       document.querySelectorAll('.editing-field').forEach(el => el.classList.remove('editing-field'));
       toggleFormulario(false);
       limpiarCampos();
@@ -8592,6 +8628,10 @@
       // Resetear paginación al cambiar de vista
       currentPage = 1;
       tableSearchQuery = "";
+
+      // Si cambiamos de vista, priorizamos registros normales
+      vistaActualTabla = "normal";
+      document.getElementById("btn-limpiar-carga").style.display = "none";
 
       // Ordenar por nombre por defecto al cambiar de vista
       currentSortCol = (v === 'administrativo') ? 7 : 11;
@@ -8829,6 +8869,14 @@
           lastAddedRef = fila;
           Swal.fire({ title: "Éxito", text: "Registro administrativo guardado", icon: "success" });
         }
+
+        if (pendingIndex > -1) {
+          registrosPendientes.splice(pendingIndex, 1);
+          if (registrosPendientes.length === 0) {
+            vistaActualTabla = "normal";
+            document.getElementById("btn-limpiar-carga").style.display = "none";
+          }
+        }
       } else {
         // Operativo
         const espLabel = get("especialidad");
@@ -8879,6 +8927,14 @@
           registrosHO.push(fila);
           lastAddedRef = fila;
           Swal.fire({ title: "Éxito", text: "Registro operativo guardado", icon: "success" });
+        }
+
+        if (pendingIndex > -1) {
+          registrosPendientes.splice(pendingIndex, 1);
+          if (registrosPendientes.length === 0) {
+            vistaActualTabla = "normal";
+            document.getElementById("btn-limpiar-carga").style.display = "none";
+          }
         }
       }
 
@@ -8964,14 +9020,85 @@
       switchView("hospital");
     }
 
+    async function prepararCargaExcel() {
+      await Swal.fire({
+        title: "Instrucciones de Carga",
+        text: "El archivo Excel debe tener exactamente estas columnas en la primera fila: CURP, NOMBRE, APELLIDO PATERNO, APELLIDO MATERNO, ESPECIALIDAD.",
+        icon: "info",
+        confirmButtonText: "Entendido, seleccionar archivo"
+      });
+      document.getElementById('excel-input').click();
+    }
+
     function procesarExcelCarga(input) {
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
-      Swal.fire({
-        title: "Carga de Excel",
-        text: `Archivo "${file.name}" cargado. La integración con el procesamiento de datos está lista.`,
-        icon: "info"
-      });
+
+      // Validar extensión
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'xlsx' && ext !== 'xls') {
+        Swal.fire({ title: "Archivo inválido", text: "Solo se permiten archivos Excel (.xlsx, .xls)", icon: "error" });
+        input.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          if (typeof XLSX === 'undefined') {
+            throw new Error("Librería de lectura de Excel no detectada.");
+          }
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet);
+
+          if (json.length === 0) {
+            Swal.fire({ title: "Excel Vacío", text: "El archivo no contiene datos.", icon: "warning" });
+            return;
+          }
+
+          // Validar Columnas
+          const firstRow = json[0];
+          const required = ["CURP", "NOMBRE", "APELLIDO PATERNO", "APELLIDO MATERNO", "ESPECIALIDAD"];
+          const keys = Object.keys(firstRow).map(k => k.trim().toUpperCase());
+          const allPresent = required.every(r => keys.includes(r));
+
+          if (!allPresent) {
+            Swal.fire({ title: "Formato Incorrecto", text: "El Excel no tiene las cabeceras requeridas en el orden indicado.", icon: "error" });
+            return;
+          }
+
+          // Mapear a registros pendientes
+          registrosPendientes = json.map(item => ({
+            curp: (item["CURP"] || "").toString().toUpperCase(),
+            nombre: (item["NOMBRE"] || "").toString().toUpperCase(),
+            paterno: (item["APELLIDO PATERNO"] || "").toString().toUpperCase(),
+            materno: (item["APELLIDO MATERNO"] || "").toString().toUpperCase(),
+            especialidad: (item["ESPECIALIDAD"] || "").toString().toUpperCase()
+          }));
+
+          vistaActualTabla = "carga";
+          document.getElementById("btn-limpiar-carga").style.display = "block";
+          renderTabla();
+          Swal.fire({ title: "Éxito", text: `${registrosPendientes.length} registros cargados. Favor de completarlos.`, icon: "success" });
+
+        } catch (err) {
+          Swal.fire({ title: "Error de lectura", text: "Hubo un problema al procesar el Excel. Asegúrese de que no esté protegido con contraseña.", icon: "error" });
+          console.error(err);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      input.value = ""; // Resetear input
+    }
+
+    function limpiarCargaPendiente() {
+      registrosPendientes = [];
+      vistaActualTabla = "normal";
+      document.getElementById("btn-limpiar-carga").style.display = "none";
+      renderTabla();
+      Swal.fire({ title: "Limpiado", text: "La mesa de trabajo ha sido vaciada.", icon: "info" });
     }
 
     function agregarRegistroDemo() {
@@ -8980,16 +9107,19 @@
         return;
       }
 
-      const nombres = ["JUAN DEMO", "MARIA DEMO", "PEDRO DEMO", "ANA DEMO", "ROBERTO DEMO", "DIANA DEMO"];
+      const nombresBase = ["JUAN", "MARIA", "PEDRO", "ANA", "ROBERTO", "DIANA", "CARLOS", "LAURA"];
       const apellidos = ["PÉREZ", "GARCÍA", "LÓPEZ", "MARTÍNEZ", "RODRÍGUEZ", "SÁNCHEZ"];
       const curps = ["ABCD123456HDFRRS01", "EFGH987654MDFLLN02", "IJKL112233HDFYYA03", "MNOP445566MDFZZB04"];
 
       const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const nombreDemo = `${rand(nombresBase)} DEMO`;
+      let fila;
 
       if (tipo === "operativo") {
-        const esp = rand(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]));
+        const specsUnicas = [...new Set(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]))];
+        const esp = rand(specsUnicas);
         const curp = rand(curps);
-        const fila = [
+        fila = [
           currentHospitalData.entidad,            // 0
           currentHospitalData.cve,                // 1
           currentHospitalData.clues,              // 2
@@ -9001,7 +9131,7 @@
           "NO",                                   // 8: Consul_Virtual
           rand(["MATUTINO", "VESPERTINO"]),       // 9: Turno
           "",                                     // 10
-          rand(nombres),                          // 11
+          nombreDemo,                             // 11
           rand(apellidos),                        // 12
           rand(apellidos),                        // 13
           "08:00",                                // 14: h_ini_at
@@ -9016,7 +9146,7 @@
         registrosHO.push(fila);
       } else {
         const curp = rand(curps);
-        const fila = [currentHospitalData.entidad, currentHospitalData.municipio, currentHospitalData.cve, currentHospitalData.clues, currentHospitalData.nombreUnidad, "", "M" + Math.floor(Math.random() * 10000), rand(nombres), rand(apellidos), rand(apellidos), curp, "", "X", "", "", "X", ""];
+        fila = [currentHospitalData.entidad, currentHospitalData.municipio, currentHospitalData.cve, currentHospitalData.clues, currentHospitalData.nombreUnidad, "", "M" + Math.floor(Math.random() * 10000), nombreDemo, rand(apellidos), rand(apellidos), curp, "", "X", "", "", "X", ""];
         registrosAdmin.push(fila);
       }
 
@@ -9184,8 +9314,14 @@
 
     function renderTabla() {
       const container = document.getElementById("tabla-registros-container");
-      const sourceData = (tipo === "administrativo") ? registrosAdmin : registrosHO;
+      let sourceData = (tipo === "administrativo") ? registrosAdmin : registrosHO;
       const esAdmin = (tipo === "administrativo");
+
+      // Si hay carga de excel pendiente y estamos en modo carga, mostrar eso
+      const esModoCarga = (vistaActualTabla === "carga" && registrosPendientes.length > 0);
+      if (esModoCarga) {
+        sourceData = registrosPendientes;
+      }
 
       // Mapeo de índices de columnas para ordenamiento
       // Operativo: CURP(29), NOMBRE(11), PATERNO(12), MATERNO(13), Esp(4), Cons(6), Tit(7), Atenc(14), Turno(9), PV(23), SUB(26)
@@ -9194,12 +9330,22 @@
       const adminColMap = [null, 6, 10, 7, 8];
 
       // 1. Preparar datos con índices originales
-      let processedData = sourceData.map((row, originalIdx) => ({ row, originalIdx }));
+      let processedData = sourceData.map((row, originalIdx) => {
+        if (esModoCarga) {
+          // Normalizar estructura de objeto a array plano para que el filtro de búsqueda funcione
+          const flatRow = [row.curp, row.nombre, row.paterno, row.materno, row.especialidad];
+          return { row: flatRow, originalIdx, raw: row };
+        }
+        return { row, originalIdx };
+      });
 
       // 2. Filtrado por búsqueda
       processedData = processedData
         .filter(item => {
           if (!tableSearchQuery) return true;
+          if (esModoCarga) {
+            return Object.values(item.raw).some(val => String(val).toLowerCase().includes(tableSearchQuery.toLowerCase()));
+          }
           return item.row.some(cell =>
             String(cell).toLowerCase().includes(tableSearchQuery.toLowerCase())
           );
@@ -9226,7 +9372,8 @@
       const paginatedData = processedData.slice(startIdx, endIdx);
 
       // 5. Título de la tabla
-      let html = `<h4 class="mb-3">Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}</h4>`;
+      const titulo = esModoCarga ? "Registros de Excel Pendientes (Favor de completar)" : `Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}`;
+      let html = `<h4 class="mb-3">${titulo}</h4>`;
 
       html += "<table><thead><tr>";
       let displayHeaders = [];
@@ -9256,6 +9403,14 @@
           const row = item.row;
           const originalIdx = item.originalIdx;
           const rowNumber = startIdx + pageIdx + 1;
+
+          if (esModoCarga) {
+            const raw = item.raw;
+            const actions = `<td><button class="btn-sm-action" style="background:#198754" onclick="completarRegistroCarga(${originalIdx})">Completar</button> <button class="btn-sm-action" style="background:#dc3545" onclick="registrosPendientes.splice(${originalIdx},1); renderTabla()">Borrar</button></td>`;
+            html += `<tr><td>${rowNumber}</td><td>${raw.curp}</td><td>${raw.nombre}</td><td>${raw.paterno}</td><td>${raw.materno}</td><td>${raw.especialidad}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>${actions}</tr>`;
+            return;
+          }
+
           const rowStyle = (row === lastAddedRef) ? 'style="background-color: #d4edda;"' : '';
 
           let privsHtml = "";
