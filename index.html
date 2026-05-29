@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agenda Médica</title>
 
-    <!-- Librería XLSX para soporte de múltiples pestañas -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
     <style>
       :root {
         --bs-primary: #0d6efd;
@@ -98,6 +95,11 @@
         box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
       }
 
+      .tab-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       .card {
         background: var(--bs-card-bg);
         padding: 1.5rem;
@@ -115,6 +117,10 @@
       .col-3 {
         grid-column: span 3;
       }
+      .col-12.no-padding-x { /* Nueva clase para col-12 sin padding horizontal */
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
       .col-4 {
         grid-column: span 4;
       }
@@ -128,9 +134,73 @@
         }
       }
 
-      @media (min-width: 769px) {
-        .admin-layout .col-3 {
-          grid-column: span 6;
+      /* Estilos para Modal (Ventana Flotante) */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: flex-start;
+        z-index: 2000;
+        overflow-y: auto;
+        padding: 40px 15px;
+        backdrop-filter: blur(3px);
+      }
+      .modal-content-wrapper {
+        background: var(--bs-card-bg);
+        width: 100%;
+        max-width: 850px;
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        position: relative;
+        padding: 20px;
+        animation: modalSlideIn 0.3s ease-out;
+      }
+      @keyframes modalSlideIn {
+        from { transform: translateY(-30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--bs-secondary);
+        font-weight: bold;
+        z-index: 10;
+      }
+
+      /* Barra de info del hospital */
+      .hospital-info-bar {
+        background: #e7f1ff;
+        border: 1px solid #b6d4fe;
+        border-radius: 50px;
+        padding: 10px 30px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #084298;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .hospital-info-bar b {
+        color: var(--bs-primary);
+      }
+
+      @media (max-width: 768px) {
+        .hospital-info-bar {
+          flex-direction: column;
+          border-radius: 20px;
+          text-align: center;
+          padding: 15px;
+          gap: 10px;
         }
       }
 
@@ -179,17 +249,16 @@
         justify-content: center;
         font-weight: 600;
         cursor: pointer;
-        padding: 0.5rem 1rem;
+        padding: 0.375rem 0.75rem;
         border-radius: 0.375rem;
         border: 1px solid transparent;
         transition: all 0.15s;
+        min-height: 38px;
       }
       .btn-primary {
         color: #fff;
         background-color: var(--bs-primary);
         border-color: var(--bs-primary);
-        width: 100%;
-        margin-top: 1rem;
       }
       .btn-primary:hover {
         opacity: 0.9;
@@ -274,6 +343,44 @@
       }
       .bg-danger { background-color: #dc3545; }
       
+      /* Estilos para el simulacro de DataTable */
+      .datatable-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .datatable-search {
+        padding: 6px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        width: 250px;
+      }
+      .pagination-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 5px;
+        margin-top: 1rem;
+      }
+      .page-link {
+        padding: 5px 10px;
+        border: 1px solid #dee2e6;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .page-link.active {
+        background-color: var(--bs-primary);
+        color: white;
+        border-color: var(--bs-primary);
+      }
+      .page-link:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
       .table-responsive {
         overflow-x: auto;
         margin-top: 2rem;
@@ -301,6 +408,11 @@
         cursor: pointer;
         min-width: 70px;
       }
+
+      .error-msg {
+        color: red;
+        font-size: 0.8rem;
+      }
     </style>
   </head>
   <body>
@@ -312,10 +424,10 @@
           <button class="tab-btn active" onclick="switchView('hospital')">
             Hospital
           </button>
-          <button class="tab-btn" onclick="switchView('operativo')">
+          <button class="tab-btn" onclick="switchView('operativo')" disabled>
             Operativo
           </button>
-          <button class="tab-btn" onclick="switchView('administrativo')">
+          <button class="tab-btn" onclick="switchView('administrativo')" disabled>
             Administrativo
           </button>
         </div>
@@ -345,7 +457,7 @@
             <legend>Ingreso de Hospital</legend>
 
             <div class="row">
-              <div class="col-6">
+              <div class="col-6" id="field-entidad">
                 <label class="form-label">Entidad Federativa</label>
                 <select
                   id="entidad"
@@ -355,10 +467,13 @@
                 >
                   <option value="">Seleccione Entidad...</option>
                 </select>
+                <input type="text" id="entidad-manual" class="form-control" style="display:none;" placeholder="Escriba entidad...">
               </div>
-              <div class="col-6">
+              <div class="col-6" id="field-unidad">
                 <label class="form-label">Nombre Unidad Médica</label>
-                <input type="text" id="search-unidad" class="form-control mb-2" placeholder="🔍 Escribe para buscar unidad..." onkeyup="actualizarUnidades()">
+                <div id="search-unidad-container">
+                  <input type="text" id="search-unidad" class="form-control mb-2" placeholder="🔍 Escribe para buscar unidad..." onkeyup="actualizarUnidades()">
+                </div>
                 <select
                   id="unidad"
                   class="form-select"
@@ -367,6 +482,7 @@
                 >
                   <option value="">Seleccione Unidad...</option>
                 </select>
+                <input type="text" id="unidad-manual" class="form-control" style="display:none;" placeholder="Escriba unidad...">
               </div>
               <div class="col-6">
                 <label class="form-label">Municipio</label>
@@ -394,47 +510,99 @@
                   placeholder="Escribe a mano"
                 />
               </div>
+              <div class="col-6" style="display: flex; align-items: center;">
+                <label class="form-check-label" style="font-size: 0.85rem;">
+                  <input type="checkbox" id="check-manual-hospital" class="form-check-input" onchange="toggleManualHospital()"> 
+                  Habilitar ingreso manual (Libre escritura)
+                </label>
+              </div>
+
+              <div class="col-6" style="display: flex; align-items: flex-end;">
+                <button
+                  id="btn-confirm-hospital"
+                  class="btn btn-primary w-100"
+                  style="padding: 0.6rem; border-radius: 50px; font-weight: 700; border: none; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);"
+                  onclick="confirmarHospital()"
+                >
+                  Confirmar Datos del Hospital
+                </button>
+                <button
+                  id="btn-edit-hospital"
+                  class="btn btn-secondary w-100"
+                  style="display: none; padding: 0.6rem; border-radius: 50px; font-weight: 700; border: none;"
+                  onclick="editarHospital()"
+                >
+                  Editar Datos del Hospital
+                </button>
+              </div>
             </div>
           </fieldset>
-
-          <button
-            id="btn-confirm-hospital"
-            class="btn btn-primary mt-4"
-            onclick="confirmarHospital()"
-          >
-            Iniciar nueva entrada (Guardar Hospital)
-          </button>
         </div>
       </div>
 
       <!-- REGISTRO -->
       <div id="registro" class="view">
+        <!-- Cabecera dinámica del hospital -->
+        <div id="hospital-header-info" class="hospital-info-bar" style="display: none;">
+          <div style="flex: 1;">Unidad: <b id="info-unidad">-</b></div>
+          <div style="flex: 1; text-align: center;">Entidad: <b id="info-entidad">-</b></div>
+          <div style="flex: 1; text-align: right;">Municipio: <b id="info-municipio">-</b></div>
+        </div>
+
+        <!-- Botones de Acción Superiores -->
+        <div id="registro-actions" style="display: none; gap: 10px; margin-bottom: 1.5rem;">
+          <button class="btn btn-primary" style="width: auto;" onclick="toggleFormulario(true)">
+            + Nuevo Registro
+          </button>
+          <button id="btn-cargar-excel" class="btn btn-secondary" style="width: auto; background-color: #198754; border-color: #198754;" onclick="document.getElementById('excel-input').click()">
+            <svg width="14" height="14" fill="currentColor" style="margin-right: 5px" viewBox="0 0 16 16">
+              <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+              <path d="M4.5 12a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/>
+            </svg>
+            Cargar EXCEL
+          </button>
+          <input type="file" id="excel-input" style="display: none;" accept=".xlsx, .xls" onchange="procesarExcelCarga(this)">
+        </div>
+
+        <div class="table-responsive" id="tabla-registros-container"></div>
+      </div>
+    </div>
+
+    <!-- MODAL DEL FORMULARIO (Fuera de los contenedores de vista para evitar conflictos de z-index) -->
+    <div id="modal-formulario" class="modal-overlay">
+      <div class="modal-content-wrapper">
+        <span class="modal-close" onclick="toggleFormulario(false)">&times;</span>
+        <h3 id="modal-title" style="color: var(--bs-primary); margin-bottom: 20px;">Nuevo Registro</h3>
+        
+        <div id="formulario-registro-container">
         <!-- SECCIÓN 1: DATOS PERSONALES -->
         <div class="card">
           <fieldset>
             <legend>Datos Personales (* Obligatorio)</legend>
             <div class="row">
-              <div id="field-clave" class="col-3">
+              <div id="field-clave" class="col-6">
                 <label class="form-label">Clave Empleado *</label>
                 <input id="clave" class="form-control" />
               </div>
-              <div id="field-matricula" class="col-3">
-                <label class="form-label">Matrícula *</label>
+              <div id="field-matricula" class="col-6">
+                <label id="lbl-matricula" class="form-label">Matrícula *</label>
                 <input id="matricula" class="form-control" />
+                <span class="error-msg" style="display:none;"></span>
               </div>
-              <div id="field-curp" class="col-3" style="display: none">
+              <div id="field-curp" class="col-6" style="display: none">
                 <label class="form-label">CURP</label>
                 <input id="curp" maxlength="18" class="form-control" placeholder="18 caracteres" />
+                <span class="error-msg" style="display:none;"></span>
               </div>
-              <div id="field-nombre" class="col-3">
+              <div id="field-nombre" class="col-4">
                 <label id="lbl-nombre" class="form-label">NOMBRE *</label>
                 <input id="nombre" class="form-control" />
               </div>
-              <div id="field-apellido" class="col-3">
+              <div id="field-apellido" class="col-4">
                 <label id="lbl-apellido" class="form-label">APELLIDO PATERNO *</label>
                 <input id="apellido" class="form-control" />
               </div>
-              <div id="field-apellido2" class="col-3">
+              <div id="field-apellido2" class="col-4">
                 <label id="lbl-apellido2" class="form-label">APELLIDO MATERNO *</label>
                 <input id="apellido2" class="form-control" />
               </div>
@@ -449,10 +617,15 @@
             <div class="row">
               <div id="field-especialidad" class="col-4">
                 <label class="form-label">Especialidad *</label>
-                <input type="text" id="search-especialidad" class="form-control mb-2" placeholder="🔍 Buscar especialidad..." onkeyup="filtrarEspecialidades()">
-                <select id="especialidad" class="form-select" onchange="actualizarNomenclaturas()">
-                  <option value="">Seleccionar...</option>
-                </select>
+                <div id="search-especialidad-container">
+                  <input type="text" id="search-especialidad" class="form-control mb-2" placeholder="🔍 Buscar especialidad..." onkeyup="filtrarEspecialidades()">
+                </div>
+                <div id="wrapper-especialidad">
+                  <select id="especialidad" class="form-select" onchange="actualizarNomenclaturas()">
+                    <option value="">Seleccionar...</option>
+                  </select>
+                  <input type="text" id="especialidad-manual" class="form-control" style="display:none;" placeholder="Escriba especialidad...">
+                </div>
               </div>
               <div id="field-tipo-consultorio" class="col-4">
                 <label class="form-label">Tipo de Consultorio *</label>
@@ -463,20 +636,26 @@
               </div>
               <div id="field-nomenclatura" class="col-4">
                 <label class="form-label">Nomenclatura *</label>
-                <select id="nomenclatura" class="form-select">
-                  <option value="">Esperando especialidad...</option>
-                </select>
+                <input id="nomenclatura" class="form-control" readonly style="background-color: #f8f9fa;" />
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-12">
+                <label class="form-check-label" style="font-size: 0.85rem;">
+                  <input type="checkbox" id="check-manual-especialidad" class="form-check-input" onchange="toggleManualEspecialidad()"> 
+                  ¿Especialidad no está en la lista? (Ingreso manual)
+                </label>
               </div>
             </div>
             <div class="row mt-4">
               <div id="field-consultorio" class="col-6">
                 <label class="form-label">Nombre del Consultorio *</label>
-                <input id="consultorio" class="form-control" placeholder="Ej. Consultorio 10 o Pediatría A" />
+                <input id="consultorio" class="form-control" placeholder="Ej. CIR_BAR" maxlength="8" />
               </div>
               <div id="field-titular" class="col-6">
                 <label class="form-label">&nbsp;</label>
                 <label class="form-check-label">
-                  <input type="checkbox" id="titular" class="form-check-input"> ¿ES TITULAR?
+                  <input type="checkbox" id="titular" class="form-check-input" checked> ¿Es titular del consultorio?
                 </label>
               </div>
             </div>
@@ -486,15 +665,15 @@
         <!-- SECCIÓN 3: HORARIOS (Operativo Only) -->
         <div id="horarios" class="card">
           <fieldset>
-            <legend>Horario de Atención (* Obligatorio)</legend>
+            <legend>Horario de Atención Jornada completa (* Obligatorio)</legend>
             <div class="row">
               <div class="col-4">
                 <label class="form-label">Inicio *</label>
-                <input type="time" id="h_ini_at" class="form-control" onfocus="initTime(this)" step="60" />
+                <input type="time" id="h_ini_at" class="form-control" onfocus="initTime(this)" onchange="actualizarRangosCitas()" step="60" />
               </div>
               <div class="col-4">
                 <label class="form-label">Fin *</label>
-                <input type="time" id="h_fin_at" class="form-control" onfocus="initTime(this)" step="60" />
+                <input type="time" id="h_fin_at" class="form-control" onfocus="initTime(this)" onchange="actualizarRangosCitas()" step="60" />
               </div>
               <div class="col-4">
                 <label class="form-label">Turno *</label>
@@ -512,7 +691,9 @@
               </div>
               <div class="col-3">
                 <label class="form-label">Inicio *</label>
-                <input type="time" id="h_ini_cita" class="form-control" onfocus="initTime(this)" onchange="calcularFinCita1()" step="60" />
+                <select id="h_ini_cita" class="form-select" onchange="calcularFinCita1()">
+                  <option value="">Esperando atención...</option>
+                </select>
               </div>
               <div class="col-3">
                 <label class="form-label">Fin *</label>
@@ -523,6 +704,18 @@
                 <select id="ocasion" class="form-select" disabled>
                   <option value="PRIMERA VEZ">PRIMERA VEZ</option>
                 </select>
+              </div>
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Días de Atención (Primera Vez):</label>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <label class="form-check-label"><input type="checkbox" id="lunes1" class="form-check-input"> L</label>
+                <label class="form-check-label"><input type="checkbox" id="martes1" class="form-check-input"> M</label>
+                <label class="form-check-label"><input type="checkbox" id="miercoles1" class="form-check-input"> Mi</label>
+                <label class="form-check-label"><input type="checkbox" id="jueves1" class="form-check-input"> J</label>
+                <label class="form-check-label"><input type="checkbox" id="viernes1" class="form-check-input"> V</label>
+                <label class="form-check-label"><input type="checkbox" id="sabado1" class="form-check-input"> S</label>
+                <label class="form-check-label"><input type="checkbox" id="domingo1" class="form-check-input"> D</label>
               </div>
             </div>
             <div class="mt-2">
@@ -548,7 +741,9 @@
                 </div>
                 <div class="col-3">
                   <label class="form-label">Inicio</label>
-                  <input type="time" id="h_ini_cita2" class="form-control" readonly step="60" />
+                  <select id="h_ini_cita2" class="form-select" onchange="calcularFinCita2()">
+                    <option value="">Esperando atención...</option>
+                  </select>
                 </div>
                 <div class="col-3">
                   <label class="form-label">Fin (Múltiples intervalos) *</label>
@@ -561,23 +756,20 @@
                   </select>
                 </div>
               </div>
+              <div class="mt-3">
+                <label class="form-label">Días de Atención (Subsecuente):</label>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                  <label class="form-check-label"><input type="checkbox" id="lunes2" class="form-check-input"> L</label>
+                  <label class="form-check-label"><input type="checkbox" id="martes2" class="form-check-input"> M</label>
+                  <label class="form-check-label"><input type="checkbox" id="miercoles2" class="form-check-input"> Mi</label>
+                  <label class="form-check-label"><input type="checkbox" id="jueves2" class="form-check-input"> J</label>
+                  <label class="form-check-label"><input type="checkbox" id="viernes2" class="form-check-input"> V</label>
+                  <label class="form-check-label"><input type="checkbox" id="sabado2" class="form-check-input"> S</label>
+                  <label class="form-check-label"><input type="checkbox" id="domingo2" class="form-check-input"> D</label>
+                </div>
+              </div>
             </fieldset>
           </div>
-
-          <fieldset class="mt-4">
-            <legend>Días de Atención</legend>
-            <div class="mt-4">
-              <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <label class="form-check-label"><input type="checkbox" id="lunes" class="form-check-input"> LUNES</label>
-                <label class="form-check-label"><input type="checkbox" id="martes" class="form-check-input"> MARTES</label>
-                <label class="form-check-label"><input type="checkbox" id="miercoles" class="form-check-input"> MIERCOLES</label>
-                <label class="form-check-label"><input type="checkbox" id="jueves" class="form-check-input"> JUEVES</label>
-                <label class="form-check-label"><input type="checkbox" id="viernes" class="form-check-input"> VIERNES</label>
-                <label class="form-check-label"><input type="checkbox" id="sabado" class="form-check-input"> SABADO</label>
-                <label class="form-check-label"><input type="checkbox" id="domingo" class="form-check-input"> DOMINGO</label>
-              </div>
-            </div>
-          </fieldset>
         </div>
 
         <!-- BOTONES DE ACCIÓN AL FINAL DEL FORMULARIO -->
@@ -597,10 +789,13 @@
           >
             Guardar Personal Administrativo
           </button>
-          <button id="btn-cancelar-edit" class="btn btn-secondary mt-3 w-100" style="display: none; background-color: #f8f9fa; color: #212529; border: 1px solid #ced4da;" onclick="cancelarEdicion()">Cancelar Edición</button>
+          <button class="btn btn-secondary mt-3 w-100" style="background-color: #f8f9fa; color: #212529; border: 1px solid #ced4da;" onclick="cancelarEdicion()">Cerrar / Cancelar</button>
         </div>
+        </div> <!-- Fin formulario-registro-container -->
+      </div>
+    </div>
 
-        <!-- ROLES COMPLETOS -->
+    <!-- ROLES COMPLETOS (Mantenido para administrativo) -->
         <div id="roles" class="card" style="display: none">
           <fieldset>
             <legend>Roles y Atribuciones</legend>
@@ -685,6 +880,158 @@
       let registrosAdmin = [];
       let editIndex = -1; // Índice para saber si estamos editando
       let tipo = "operativo";
+
+      // Variables para paginación y búsqueda
+      let currentPage = 1;
+      let rowsPerPage = 5;
+      let tableSearchQuery = "";
+      let formVisible = false;
+      let isHospitalConfirmed = false;
+
+      // Asegúrate de tener este Set definido fuera de la función
+      const ESTADOS_CURP = new Set([
+        "AS", "BC", "BS", "CC", "CH", "CH", "CL", "CM", "CS", "DF", "DG", 
+        "GR", "GT", "HG", "JC", "MC", "MN", "MS", "NT", "NL", "OC", "PL", 
+        "QT", "QR", "SP", "SL", "SR", "TC", "TS", "TL", "VZ", "YN", "ZS", "NE"
+      ]);
+
+      function validarCURPs() {
+        const inputs = document.querySelectorAll(".curp-input");
+        let tieneErrores = false;
+
+        // Estructuras para el control de duplicados
+        const curpCounts = {};
+        const inputsData = [];
+
+        // --- PRIMERA PASADA: Reinicio, Limpieza y Validaciones Estructurales ---
+        inputs.forEach((input) => {
+          let curp = input.value.trim().toUpperCase();
+          const errorMsg = input.nextElementSibling;
+
+          // Reset visual básico
+          input.style.borderColor = "";
+          if (errorMsg && errorMsg.classList.contains("error-msg")) {
+            errorMsg.style.display = "none";
+            errorMsg.textContent = "";
+          }
+
+          if (curp === "") {
+            inputsData.push({ input, errorMsg, curp, valido: true, esVacio: true });
+            return;
+          }
+
+          let errores = [];
+
+          // 1) Longitud
+          if (curp.length !== 18) {
+            errores.push(`Longitud: ${curp.length}/18.`);
+          }
+          
+          // 2) Validación estructural carácter por carácter
+          let errLetras = [];
+          let errNumeros = [];
+          for (let i = 0; i < curp.length; i++) {
+            const char = curp[i];
+            if ((i >= 0 && i <= 3) || (i >= 11 && i <= 15)) {
+              if (!/[A-Z]/.test(char)) errLetras.push(i + 1);
+            } else if ((i >= 4 && i <= 9) || i === 17) {
+              if (!/[0-9]/.test(char)) errNumeros.push(i + 1);
+            } else if (i === 10) {
+              if (char !== "H" && char !== "M") errores.push("Pos 11 (Sexo) debe ser H o M.");
+            } else if (i === 16) {
+              if (!/[A-Z0-9]/.test(char)) errores.push("Pos 17 incorrecta.");
+            }
+          }
+          if (errLetras.length > 0) errores.push(`Letras en pos ${errLetras.join(", ")}.`);
+          if (errNumeros.length > 0) errores.push(`Números en pos ${errNumeros.join(", ")}.`);
+
+          // 3) Validaciones lógicas (solo si longitud es 18)
+          if (curp.length === 18) {
+            const ent = curp.substring(11, 13);
+            if (/[A-Z]{2}/.test(ent) && !ESTADOS_CURP.has(ent)) {
+              errores.push(`Entidad inválida ("${ent}").`);
+            }
+
+            const anioNum = parseInt(curp.substring(4, 6), 10);
+            const mesNum = parseInt(curp.substring(6, 8), 10);
+            const diaNum = parseInt(curp.substring(8, 10), 10);
+            const esSigloXXi = /^\d$/.test(curp.charAt(16));
+            const fullYear = esSigloXXi ? 2000 + anioNum : 1900 + anioNum;
+            const birth = new Date(fullYear, mesNum - 1, diaNum);
+            const fechaExiste = (birth.getFullYear() === fullYear && birth.getMonth() === mesNum - 1 && birth.getDate() === diaNum);
+
+            if (!fechaExiste) {
+              if (errNumeros.filter(p => p >= 5 && p <= 10).length === 0) {
+                errores.push(`Fecha inexistente (${curp.substring(4, 10)}).`);
+              }
+            } else {
+              const now = new Date();
+              let age = now.getFullYear() - birth.getFullYear();
+              const m = now.getMonth() - birth.getMonth();
+              if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+              if (age >= 80) errores.push("Debe ser menor de 80 años.");
+            }
+
+            if (!validarDigitoVerificador(curp)) {
+              errores.push("Dígito verificador incorrecto.");
+            }
+          }
+
+          let mensaje = "";
+          let localError = false;
+          if (errores.length > 0) {
+            localError = true;
+            if (errores.length <= 2) {
+              mensaje = errores.join(" ");
+            } else {
+              mensaje = "La CURP tiene múltiples errores, por favor corrígela.";
+            }
+          }
+
+          if (localError) {
+            tieneErrores = true;
+          } else {
+            curpCounts[curp] = (curpCounts[curp] || 0) + 1;
+          }
+
+          inputsData.push({ input, errorMsg, curp, valido: !localError, esVacio: false, mensaje });
+        });
+
+        // --- SEGUNDA PASADA: Control de Duplicados y Pintado Final ---
+        inputsData.forEach((item) => {
+          if (item.esVacio) return;
+          if (!item.valido) {
+            marcarError(item.input, item.errorMsg, item.mensaje);
+          } else if (curpCounts[item.curp] > 1) {
+            marcarError(item.input, item.errorMsg, "Esta CURP está duplicada en el formulario.");
+            tieneErrores = true;
+          } else {
+            item.input.style.borderColor = "green";
+          }
+        });
+        return !tieneErrores;
+      }
+
+      function marcarError(input, errorMsg, desglose) {
+        input.style.borderColor = "red";
+        if (errorMsg) {
+          errorMsg.textContent = desglose;
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function validarDigitoVerificador(curp) {
+        const diccionario = "0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+        let suma = 0;
+        for (let i = 0; i < 17; i++) {
+          const valor = diccionario.indexOf(curp.charAt(i));
+          suma += valor * (18 - i);
+        }
+        const residuo = suma % 10;
+        const digitoEsperado = (10 - residuo) % 10;
+        const digitoReal = parseInt(curp.charAt(17), 10);
+        return digitoEsperado === digitoReal;
+      }
 
       // --- BASE DE DATOS DE HOSPITALES ---
       // Estructura: { entidad: string, municipio: string, nombre: string, clues: string }
@@ -7561,9 +7908,25 @@
           selectTurno.add(new Option(`${i + 1}. ${t}`, t));
         });
         
-        // Recalcular horarios si las horas de atención cambian
-        document.getElementById("h_ini_at").addEventListener('change', () => { calcularFinCita1(); calcularFinCita2(); });
-        document.getElementById("h_fin_at").addEventListener('change', () => { calcularFinCita1(); calcularFinCita2(); });
+        // Forzar Mayúsculas en todos los inputs de texto
+        document.addEventListener("input", function(e) {
+          if (e.target.tagName === "INPUT" && e.target.type === "text" || e.target.id === "clave" || e.target.id === "matricula") {
+            const start = e.target.selectionStart;
+            e.target.value = e.target.value.toUpperCase();
+            e.target.setSelectionRange(start, start);
+          }
+        });
+
+        // Validación en tiempo real para CURP
+        ["matricula", "curp"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener("input", function() {
+              this.value = this.value.toUpperCase();
+              validarCURPs();
+            });
+          }
+        });
       };
 
       function initTime(el) {
@@ -7576,7 +7939,7 @@
         if (container.style.display === "none") {
           container.style.display = "block";
           icon.textContent = "-";
-          document.getElementById("h_ini_cita2").value = document.getElementById("h_fin_cita").value;
+          if(!document.getElementById("h_ini_cita2").value) document.getElementById("h_ini_cita2").value = document.getElementById("h_fin_cita").value;
           calcularFinCita2();
         } else {
           container.style.display = "none";
@@ -7585,6 +7948,34 @@
           document.getElementById("h_ini_cita2").value = "";
           document.getElementById("h_fin_cita2").value = "";
         }
+      }
+
+      function actualizarRangosCitas() {
+        const startAt = get("h_ini_at");
+        const endAt = get("h_fin_at");
+        
+        poblarSelectInicio("h_ini_cita", startAt, endAt);
+        poblarSelectInicio("h_ini_cita2", startAt, endAt);
+        
+        calcularFinCita1();
+        calcularFinCita2();
+      }
+
+      function poblarSelectInicio(selectId, startStr, endStr) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">Inicio...</option>';
+        if (!startStr || !endStr) return;
+
+        let current = timeToMinutes(startStr);
+        const end = timeToMinutes(endStr);
+        while (current < end) {
+          const val = minutesToTime(current);
+          select.add(new Option(val, val));
+          current += 5;
+        }
+        if (currentVal) select.value = currentVal;
       }
 
       function timeToMinutes(timeStr) {
@@ -7600,17 +7991,15 @@
       }
 
       function calcularFinCita1() {
+        const h_fin_at = get("h_fin_at");
         const h_ini_cita = get("h_ini_cita");
         const intervalo = parseInt(get("intervalo"));
-        const h_fin_at = get("h_fin_at");
         const selectFinCita = document.getElementById("h_fin_cita");
 
         selectFinCita.innerHTML = '<option value="">Seleccionar Fin...</option>';
-
         if (h_ini_cita && !isNaN(intervalo) && intervalo > 0) {
           const inicioMin = timeToMinutes(h_ini_cita);
           const finAtencionMin = timeToMinutes(h_fin_at);
-
           if (!h_fin_at) return;
 
           let currentMin = inicioMin + intervalo;
@@ -7628,24 +8017,17 @@
             selectFinCita.innerHTML = '<option value="">Espacio insuficiente</option>';
           }
         }
-
-        syncCita2Inicio();
       }
 
       function syncCita2Inicio() {
-        const finCita1 = get("h_fin_cita");
-        document.getElementById("h_ini_cita2").value = finCita1;
-        if (document.getElementById("cita-2-container").style.display !== "none") {
-          calcularFinCita2();
-        }
+        // Ya no sincronizamos automáticamente para permitir libertad de inicio en Subsecuente
       }
 
       function calcularFinCita2() {
+        const h_fin_at = get("h_fin_at");
         const h_ini_cita2 = get("h_ini_cita2");
         const intervalo2 = parseInt(get("intervalo2"));
-        const h_fin_at = get("h_fin_at");
         const selectFinCita2 = document.getElementById("h_fin_cita2");
-
         selectFinCita2.innerHTML = '<option value="">Seleccionar Fin...</option>';
 
         if (h_ini_cita2 && !isNaN(intervalo2) && intervalo2 > 0) {
@@ -7750,6 +8132,20 @@
         });
       }
 
+      function toggleFormulario(show = null) {
+        const modal = document.getElementById("modal-formulario");
+        if (show === null) formVisible = !formVisible;
+        else formVisible = show;
+
+        modal.style.display = formVisible ? "flex" : "none";
+        
+        // Actualizar textos de botones según modo edición
+        const isEditing = (Array.isArray(editIndex) || editIndex > -1);
+        document.getElementById("modal-title").textContent = isEditing ? "Editar Registro" : "Nuevo Registro";
+        document.getElementById("btn-save-op").textContent = isEditing ? "Actualizar Registro Operativo" : "Guardar Personal Operativo";
+        document.getElementById("btn-save-admin").textContent = isEditing ? "Actualizar Registro Administrativo" : "Guardar Personal Administrativo";
+      }
+
       function eliminarRegistro(idx) {
         if (confirm("¿Seguro que deseas eliminar este registro?")) {
           if (tipo === "operativo") registrosHO.splice(idx, 1);
@@ -7763,42 +8159,70 @@
         const data = (tipo === "operativo") ? registrosHO[idx] : registrosAdmin[idx];
         if (!data) return;
         
-        // Pintar bordes en rojo para indicar edición
-        document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.add('editing-field'));
-        document.getElementById("btn-cancelar-edit").style.display = "block";
+        // Limpiar estilos de error previos
+        document.querySelectorAll('.form-control, .form-select').forEach(el => el.style.borderColor = "");
         
         if (tipo === "operativo") {
-          // Cargar datos al formulario (basado en el orden de la fila de registrosHO)
-          document.getElementById("clave").value = data[8];
-          document.getElementById("nombre").value = data[9];
-          document.getElementById("apellido").value = data[10];
-          document.getElementById("apellido2").value = data[11];
-          document.getElementById("especialidad").value = data[5];
-          document.getElementById("tipo_consultorio").value = data[30] || "FISICO";
-          actualizarNomenclaturas();
+          document.getElementById("clave").value = data[10] || "";
+          document.getElementById("nombre").value = data[11] || "";
+          document.getElementById("apellido").value = data[12] || "";
+          document.getElementById("apellido2").value = data[13] || "";
+          document.getElementById("matricula").value = data[29] || "";
           
-          // Esperar un momento a que el select de nomenclatura se llene
-          setTimeout(() => {
-            document.getElementById("nomenclatura").value = data[6];
-          }, 50);
+          document.getElementById("especialidad").value = data[4] || "";
+          document.getElementById("tipo_consultorio").value = data[8] === "SI" ? "VIRTUAL" : "FISICO";
+          actualizarNomenclaturas();
+          document.getElementById("nomenclatura").value = data[5] || "";
+          document.getElementById("consultorio").value = data[6] || "";
+          document.getElementById("titular").checked = (data[7] === "X");
 
-          document.getElementById("consultorio").value = data[7] || "";
-          document.getElementById("titular").checked = (data[12] === "Sí");
-          document.getElementById("h_ini_at").value = data[13];
-          document.getElementById("h_fin_at").value = data[14];
-          document.getElementById("turno").value = data[7];
-          document.getElementById("h_ini_cita").value = data[15];
-          document.getElementById("intervalo").value = data[17];
+          document.getElementById("h_ini_at").value = data[14] || "";
+          document.getElementById("h_fin_at").value = data[15] || "";
+          actualizarRangosCitas();
+          document.getElementById("turno").value = data[9] || "";
+
+          // Horarios PV
+          document.getElementById("intervalo").value = data[25] || "30";
+          document.getElementById("h_ini_cita").value = data[23] || "";
           calcularFinCita1();
-          // Sincronizar checkboxes de días... (puedes agregar lógica para row[23] a row[29])
+          document.getElementById("h_fin_cita").value = data[24] || "";
+
+          // Horarios SUB
+          document.getElementById("intervalo2").value = data[28] || "20";
+          document.getElementById("h_ini_cita2").value = data[26] || "";
+          calcularFinCita2();
+          document.getElementById("h_fin_cita2").value = data[27] || "";
+
+          // Checkboxes de Días
+          const pvDays = data[30] || [];
+          const subDays = data[31] || [];
+          const diasIds = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+          diasIds.forEach((id, i) => {
+            document.getElementById(id + "1").checked = !!pvDays[i];
+            document.getElementById(id + "2").checked = !!subDays[i];
+          });
+        } else {
+          // Administrativo
+          document.getElementById("matricula").value = data[6] || "";
+          document.getElementById("nombre").value = data[7] || "";
+          document.getElementById("apellido").value = data[8] || "";
+          document.getElementById("apellido2").value = data[9] || "";
+          document.getElementById("curp").value = data[10] || "";
+          
+          document.getElementById("role_asistente").checked = data[12] === "X";
+          document.getElementById("role_admin").checked = data[13] === "X";
+          document.getElementById("role_director").checked = data[14] === "X";
+          document.getElementById("role_jefe").checked = data[15] === "X";
+          document.getElementById("role_agenda").checked = data[16] === "X";
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        toggleFormulario(true);
       }
 
       function cancelarEdicion() {
         editIndex = -1;
         document.querySelectorAll('.editing-field').forEach(el => el.classList.remove('editing-field'));
-        document.getElementById("btn-cancelar-edit").style.display = "none";
+        toggleFormulario(false);
         limpiarCampos();
       }
 
@@ -7808,35 +8232,93 @@
       });
 
       function actualizarNomenclaturas() {
-        const specSel = document.getElementById("especialidad").value;
+        const specSel = get("especialidad");
         const tipoSel = document.getElementById("tipo_consultorio").value;
-        const selectNom = document.getElementById("nomenclatura");
+        const inputNom = document.getElementById("nomenclatura");
         
         if (!specSel) {
-          selectNom.innerHTML = '<option value="">Esperando especialidad...</option>';
+          inputNom.value = "";
           return;
         }
 
-        const filtered = SPECIALTY_DATA.filter(x => 
-          x["Descripción Especialidad / Subespecialidad"] === specSel && 
+        // Propuesta automática de Nombre de Consultorio (solo en nuevas entradas)
+        if (editIndex === -1) {
+          const words = specSel.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .split(/[\s,/-]+/)
+            .filter(w => !stopWords.includes(w) && w.length > 1);
+
+          let proposal = "";
+          if (words.length === 1) {
+            proposal = words[0].substring(0, 8);
+          } else if (words.length === 2) {
+            proposal = (words[0].substring(0, 3) + "_" + words[1].substring(0, 3)).substring(0, 8);
+          } else if (words.length >= 3) {
+            proposal = (words[0].substring(0, 2) + "_" + words[1].substring(0, 2) + "_" + words[2].substring(0, 2)).substring(0, 8);
+          }
+          document.getElementById("consultorio").value = proposal;
+        }
+
+        const match = SPECIALTY_DATA.find(x => 
+          x["Descripción Especialidad / Subespecialidad"].toUpperCase() === specSel.toUpperCase() && 
           x["Tipo Consultorio"] === tipoSel
         );
 
-        selectNom.innerHTML = `<option value="">Seleccionar Nomenclatura... (${filtered.length})</option>`;
-        filtered.forEach((item, i) => {
-          const nomCode = item["Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)"];
-          selectNom.add(new Option(`${i + 1}. ${nomCode}`, nomCode));
-        });
+        inputNom.value = match ? match["Nomenclatura Consultorio\r\n(ECE IMSS - MoCE)"] : "";
+      }
 
-        if (filtered.length === 1) {
-          selectNom.selectedIndex = 1;
+      function toggleManualHospital() {
+        const isManual = document.getElementById("check-manual-hospital").checked;
+        const selects = ["entidad", "unidad"];
+        const inputs = ["entidad-manual", "unidad-manual"];
+        const readonlys = ["municipio", "clues"];
+
+        selects.forEach(id => document.getElementById(id).style.display = isManual ? "none" : "block");
+        inputs.forEach(id => {
+          const el = document.getElementById(id);
+          el.style.display = isManual ? "block" : "none";
+          el.value = "";
+        });
+        readonlys.forEach(id => {
+          const el = document.getElementById(id);
+          el.readOnly = !isManual;
+          el.style.backgroundColor = isManual ? "#fff" : "#e9ecef";
+          el.value = "";
+        });
+        document.getElementById("search-unidad-container").style.display = isManual ? "none" : "block";
+        if (!isManual) actualizarUnidades();
+      }
+
+      function toggleManualEspecialidad() {
+        const isManual = document.getElementById("check-manual-especialidad").checked;
+        document.getElementById("especialidad").style.display = isManual ? "none" : "block";
+        const manualInput = document.getElementById("especialidad-manual");
+        manualInput.style.display = isManual ? "block" : "none";
+        manualInput.value = "";
+        document.getElementById("search-especialidad-container").style.display = isManual ? "none" : "block";
+        
+        if (!isManual) {
+          document.getElementById("especialidad").selectedIndex = 0;
+          actualizarNomenclaturas();
         }
       }
 
       function switchView(v) {
         document
-          .querySelectorAll(".tab-btn")
-          .forEach((b) => b.classList.remove("active"));
+        const tabs = document.querySelectorAll(".tab-btn");
+        
+        // Bloquear navegación si no hay hospital
+        if (v !== 'hospital' && !isHospitalConfirmed) {
+          alert("⚠️ Debe confirmar los datos del Hospital primero.");
+          return;
+        }
+
+        tabs.forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".error-msg").forEach(el => { el.textContent = ""; el.style.display = "none"; });
+        document.querySelectorAll(".form-control").forEach(el => el.style.borderColor = "");
+
+        // Resetear paginación al cambiar de vista
+        currentPage = 1;
+        tableSearchQuery = "";
 
         if (v === "hospital") {
           tipo = "hospital";
@@ -7858,56 +8340,76 @@
           [v === "operativo" ? 1 : 2].classList.add("active");
 
         let isOp = v === "operativo";
-        let row = document.querySelector("#registro .row");
 
-        if (isOp) row.classList.remove("admin-layout");
-        else row.classList.add("admin-layout");
+        // Mostrar botones de acción si no estamos en la pestaña Hospital
+        document.getElementById("registro-actions").style.display = (v === 'hospital') ? "none" : "flex";
+        document.getElementById("btn-cargar-excel").style.display = isOp ? "flex" : "none";
 
-        document.getElementById("field-clave").style.display = isOp
-          ? "block"
-          : "none";
         document.getElementById("field-titular").style.display = isOp
           ? "block"
           : "none";
         document.getElementById("field-nomenclatura").style.display = isOp
           ? "block"
           : "none";
-        document.getElementById("field-curp").style.display = isOp
-          ? "none"
-          : "block";
-        document.getElementById("roles").style.display = isOp
-          ? "none"
-          : "block";
-        document.getElementById("btn-save-op").style.display = isOp
-          ? "flex"
-          : "none";
-        document.getElementById("btn-save-admin").style.display = isOp
-          ? "none"
-          : "flex";
-
+        document.getElementById("field-clave").style.display = isOp ? "block" : "none";
+        document.getElementById("field-titular").style.display = isOp ? "block" : "none";
+        document.getElementById("field-nomenclatura").style.display = isOp ? "block" : "none";
+        document.getElementById("field-curp").style.display = isOp ? "none" : "block";
+        document.getElementById("roles").style.display = isOp ? "none" : "block";
         document.getElementById("seccion-especialidad").style.display = isOp ? "block" : "none";
         document.getElementById("horarios").style.display = isOp ? "block" : "none";
 
-        document.getElementById("lbl-nombre").textContent = isOp
-          ? "NOMBRE"
-          : "Nombre";
-        document.getElementById("lbl-apellido").textContent = isOp 
-          ? "APELLIDO PATERNO" 
-          : "APELLIDO";
-        document.getElementById("lbl-apellido2").textContent = isOp
-          ? "APELLIDO MATERNO"
-          : "2DO APELLIDO";
+        const matInput = document.getElementById("matricula");
+        const curpInput = document.getElementById("curp");
+        const lblMatricula = document.getElementById("lbl-matricula");
+
+        if (isOp) {
+          lblMatricula.textContent = "CURP *";
+          matInput.classList.add("curp-input");
+          curpInput.classList.remove("curp-input");
+          matInput.placeholder = "Ingrese CURP de 18 caracteres";
+          document.getElementById("cita-2-container").style.display = "block";
+          document.getElementById("btn-toggle-cita2").style.display = "none";
+        } else {
+          lblMatricula.textContent = "Matrícula *";
+          matInput.classList.remove("curp-input");
+          curpInput.classList.add("curp-input");
+          matInput.placeholder = "";
+          document.getElementById("cita-2-container").style.display = "none";
+          document.getElementById("btn-toggle-cita2").style.display = "block";
+        }
+
+        document.getElementById("btn-save-op").style.display = isOp ? "flex" : "none";
+        document.getElementById("btn-save-admin").style.display = isOp ? "none" : "flex";
+
+        document.getElementById("lbl-nombre").textContent = isOp ? "NOMBRE" : "Nombre";
+        document.getElementById("lbl-apellido").textContent = isOp ? "APELLIDO PATERNO" : "APELLIDO";
+        document.getElementById("lbl-apellido2").textContent = isOp ? "APELLIDO MATERNO" : "2DO APELLIDO";
+
+        validarCURPs();
         renderTabla();
       }
 
       function get(id) {
+        const manualEl = document.getElementById(id + "-manual");
+        if (manualEl && manualEl.style.display !== "none") {
+          return manualEl.value || "";
+        }
         return document.getElementById(id)?.value || "";
       }
+
       function check(id) {
-        return document.getElementById(id)?.checked ? "Sí" : "No";
+        return document.getElementById(id)?.checked ? "X" : "";
       }
 
       function guardar() {
+        // 0. Validar que exista un hospital confirmado
+        if (!currentHospitalData || !currentHospitalData.clues) {
+          alert("⚠️ No se puede guardar el registro: Primero debes definir y confirmar un Hospital en la pestaña 'Hospital'.");
+          switchView('hospital');
+          return;
+        }
+
         const unitVal = get("unidad");
         const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
         const unitName = hObj["NOMBRE DE LA UNIDAD"] || "";
@@ -7915,7 +8417,7 @@
 
         // 1. Identificar campos obligatorios
         const mandatory = ["nombre", "apellido", "apellido2", "matricula"];
-        if (tipo === "operativo") mandatory.push("clave", "especialidad", "tipo_consultorio", "nomenclatura", "consultorio", "h_ini_at", "h_fin_at", "turno", "h_ini_cita", "h_fin_cita", "intervalo");
+        if (tipo === "operativo") mandatory.push("clave", "especialidad", "tipo_consultorio", "nomenclatura", "consultorio", "h_ini_at", "h_fin_at", "turno", "h_ini_cita", "h_fin_cita", "intervalo", "h_ini_cita2", "h_fin_cita2", "intervalo2");
         else mandatory.push("curp");
 
         // 2. Limpiar estilos previos y validar
@@ -7931,6 +8433,12 @@
 
         if (!valid) {
           alert("Por favor, completa los campos marcados en rojo.");
+          return;
+        }
+
+        // Ejecutar validaciones de CURP
+        if (!validarCURPs()) {
+          alert("Hay errores en el formato de la CURP. Revisa los mensajes en rojo.");
           return;
         }
 
@@ -7980,99 +8488,110 @@
               }
 
               if (h_ini_cita2 && h_fin_cita2) { // Solo si ambos están llenos
-                if (h_ini_cita2 < h_ini_at || h_fin_cita2 > h_fin_at) {
-                  alert("¡Error! El segundo horario de CITA debe estar comprendido dentro del Horario de ATENCIÓN.");
-                  return;
-                }
-                // Validar que Cita 1 y Cita 2 no se solapen
-                if (h_ini_cita2 < h_fin_cita && h_fin_cita2 > h_ini_cita) {
-                  alert("¡Error! Los horarios de Cita 1 y Cita 2 se solapan.");
+                // Validar que Cita 1 y Cita 2 no se solapen SOLO si comparten algún día
+                const d1 = ["lunes1","martes1","miercoles1","jueves1","viernes1","sabado1","domingo1"];
+                const d2 = ["lunes2","martes2","miercoles2","jueves2","viernes2","sabado2","domingo2"];
+                const comparteDia = d1.some((id, i) => 
+                  document.getElementById(id).checked && document.getElementById(d2[i]).checked
+                );
+
+                if (comparteDia && timeToMinutes(h_ini_cita2) < timeToMinutes(h_fin_cita) && timeToMinutes(h_fin_cita2) > timeToMinutes(h_ini_cita)) {
+                  alert("¡Error! Los horarios de Cita 1 y Cita 2 se solapan en los mismos días de atención.");
                   return;
                 }
               }
             }
         }
 
-        if (tipo === "administrativo") {
-          if (get("curp").length !== 18) {
-            alert("CURP debe tener 18 caracteres");
+        // Validación de días para Operativo
+        if (tipo === "operativo") {
+          const days1 = ["lunes1", "martes1", "miercoles1", "jueves1", "viernes1", "sabado1", "domingo1"].some(id => document.getElementById(id).checked);
+          const days2 = ["lunes2", "martes2", "miercoles2", "jueves2", "viernes2", "sabado2", "domingo2"].some(id => document.getElementById(id).checked);
+          
+          if (!days1) {
+            alert("Debes seleccionar al menos un día para la Cita 1 (Primera Vez).");
             return;
           }
+          if (!days2) {
+             alert("Debes seleccionar al menos un día para la Cita 2 (Subsecuente).");
+             return;
+          }
+        }
 
-          let roles = [
-            document.getElementById("role_asistente").checked,
-            document.getElementById("role_admin").checked,
-            document.getElementById("role_director").checked,
-            document.getElementById("role_jefe").checked,
-            document.getElementById("role_agenda").checked,
-          ];
-
+        if (tipo === "administrativo") {
+          let roles = ["role_asistente", "role_admin", "role_director", "role_jefe", "role_agenda"].map(id => document.getElementById(id).checked);
           if (!roles.includes(true)) {
             alert("Debes seleccionar al menos un rol");
             return;
           }
 
           const fila = [
-            get("entidad"),
-            document.getElementById("municipio").value,
-            document.getElementById("cve").value,
-            document.getElementById("clues").value,
-            unitName,
+            currentHospitalData.entidad,            // 0: Entidad Federativa
+            currentHospitalData.municipio,          // 1: Municipio
+            currentHospitalData.cve,                // 2: CVE_PRESUPUESTAL
+            currentHospitalData.clues,              // 3: CLUES
+            currentHospitalData.nombreUnidad,       // 4: Nombre Unidad Medica
             "", // Clave Empleado vacío para admin en su estructura
-            get("matricula"),
-            get("nombre"),
-            get("apellido"),
-            get("apellido2"),
-            get("curp"),
+            get("matricula"),                       // 6: Matrícula
+            get("nombre"),                          // 7: Nombre
+            get("apellido"),                        // 8: Apellido
+            get("apellido2"),                       // 9: 2do Apellido
+            get("curp"),                            // 10: CURP
             "", // Titular vacío para admin
-            check("role_asistente"),
-            check("role_admin"),
-            check("role_director"),
-            check("role_jefe"),
-            check("role_agenda"),
+            check("role_asistente"),                // 12: Privs...
+            check("role_admin"),                    // 13
+            check("role_director"),                 // 14
+            check("role_jefe"),                     // 15
+            check("role_agenda"),                   // 16
           ];
-          registrosAdmin.push(fila);
+
+          if (editIndex > -1) {
+            registrosAdmin[editIndex] = fila;
+            alert("Registro administrativo actualizado");
+          } else {
+            registrosAdmin.push(fila);
+            alert("Registro administrativo guardado");
+          }
         } else {
           // Operativo
           const espLabel = get("especialidad");
-          const unitVal = get("unidad");
-          const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
-          const unitName = hObj["NOMBRE DE LA UNIDAD"] || "";
+          const currentTC = get("tipo_consultorio");
+          const curpVal = get("matricula");
+          
+          const diasIds = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+          const pvDaysChecked = diasIds.map(d => document.getElementById(d + "1").checked);
+          const subDaysChecked = diasIds.map(d => document.getElementById(d + "2").checked);
+
+          const getDayContent = (idx) => {
+            let parts = [];
+            if (pvDaysChecked[idx]) parts.push(`PV: ${get("h_ini_cita")}-${get("h_fin_cita")} (${get("intervalo")}m)`);
+            if (subDaysChecked[idx]) parts.push(`SUB: ${get("h_ini_cita2")}-${get("h_fin_cita2")} (${get("intervalo2")}m)`);
+            return parts.join(" / ");
+          };
 
           const fila = [
-            get("entidad"),
-            document.getElementById("municipio").value,
-            document.getElementById("cve").value,
-            document.getElementById("clues").value,
-            unitName,
-            espLabel,
-            get("nomenclatura"),
-            get("consultorio"),
-            get("turno"),
-            get("clave"),
-            get("matricula"),
-            get("nombre"),
-            get("apellido"),
-            get("apellido2"),
-            check("titular"),
-            get("h_ini_at"),
-            get("h_fin_at"),
-            get("h_ini_cita"),
-            get("h_fin_cita"),
-            get("intervalo"),
-            "PRIMERA VEZ",
-            get("h_ini_cita2"),
-            get("h_fin_cita2"),
-            get("intervalo2"),
-            get("h_ini_cita2") ? "SUBSECUENTE" : "",
-            check("lunes"),
-            check("martes"),
-            check("miercoles"),
-            check("jueves"),
-            check("viernes"),
-            check("sabado"),
-            check("domingo"),
-            get("tipo_consultorio")
+            currentHospitalData.entidad,            // 0: Entidad Federativa
+            currentHospitalData.cve,                // 1: CVE_PRESUPUESTAL
+            currentHospitalData.clues,              // 2: CLUES
+            currentHospitalData.nombreUnidad,       // 3: Nombre Unidad Médica
+            espLabel,                               // 4: Especialidad
+            get("nomenclatura"),                    // 5: Nomenclatura
+            get("consultorio"),                     // 6: Nombre Consultorio
+            check("titular"),                       // 7: TITULAR
+            (currentTC === "VIRTUAL" ? "SI" : "NO"), // 8: Consul_Virtual
+            get("turno"),                           // 9: Turno
+            get("clave"),                           // 10: Clave Empleado
+            get("nombre"),                          // 11: NOMBRE
+            get("apellido"),                        // 12: APELLIDO
+            get("apellido2"),                       // 13: SEGUNDO APELLIDO
+            get("h_ini_at"),                        // 14: HORA_INICIO_ATENCION
+            get("h_fin_at"),                        // 15: HORA_FIN_ATENCION
+            getDayContent(0), getDayContent(1), getDayContent(2), getDayContent(3), getDayContent(4), getDayContent(5), getDayContent(6), // 16-22: L-D
+            get("h_ini_cita"), get("h_fin_cita"), get("intervalo"), // 23,24,25 (Metadata PV)
+            get("h_ini_cita2"), get("h_fin_cita2"), get("intervalo2"), // 26,27,28 (Metadata SUB)
+            curpVal,                                // 29: Matrícula/CURP
+            pvDaysChecked,                          // 30: Array días PV
+            subDaysChecked                          // 31: Array días SUB
           ];
           
           if (editIndex > -1) {
@@ -8080,7 +8599,7 @@
             alert("Registro actualizado correctamente");
           } else {
             registrosHO.push(fila);
-            alert("Guardado correctamente");
+            alert("Registro guardado correctamente");
           }
         }
 
@@ -8091,27 +8610,112 @@
 
       // Guardar hospital y pasar a operativo sin que se mezcle con administrativos
       function confirmarHospital() {
-        // Validación mínima: debe existir entidad/unidad/clues/cve
-        if (!get("entidad") || !get("unidad")) {
-          alert("Selecciona Entidad y Unidad");
+        const hFields = ["entidad", "unidad", "cve"];
+        let valid = true;
+        hFields.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el.value) {
+            el.style.borderColor = "red";
+            valid = false;
+          }
+        });
+
+        if (!valid) {
+          alert("⚠️ Por favor complete los campos obligatorios del hospital.");
           return;
         }
 
-        // Cambiar a operativo
+        const entSel = get("entidad");
+        const unSel = get("unidad");
+        const hObj = HOSPITAL_DATA.find(x => x.CLUES === unSel && x.ENTIDAD === entSel);
+
+        currentHospitalData = {
+          entidad: hObj.ENTIDAD,
+          municipio: hObj.MUNICIPIO,
+          nombreUnidad: hObj["NOMBRE DE LA UNIDAD"],
+          clues: hObj.CLUES,
+          cve: get("cve")
+        };
+
+        isHospitalConfirmed = true;
+        hFields.concat(["search-unidad"]).forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.disabled = true;
+            el.style.backgroundColor = "#e9ecef";
+          }
+        });
+
+        document.getElementById("search-unidad").disabled = true;
+        document.getElementById("btn-confirm-hospital").style.display = "none";
+        document.getElementById("btn-edit-hospital").style.display = "block";
+
+        // Actualizar Cabecera
+        document.getElementById("info-unidad").textContent = currentHospitalData.nombreUnidad;
+        document.getElementById("info-entidad").textContent = currentHospitalData.entidad;
+        document.getElementById("info-municipio").textContent = currentHospitalData.municipio;
+        document.getElementById("hospital-header-info").style.display = "flex";
+
+        // Habilitar pestañas visualmente
+        document.querySelectorAll(".tab-btn").forEach(b => b.disabled = false);
+        
+        // Redirigir a la pestaña Operativo automáticamente
         switchView("operativo");
 
-        // Preparar para que el usuario capture el personal operativo
-        // (no limpiamos municipio/clues/cve, para que conserve el hospital)
-        document.getElementById("clave").value = "";
-        document.getElementById("nombre").value = "";
-        document.getElementById("apellido").value = "";
-        document.getElementById("apellido2").value = "";
-        document.getElementById("titular").checked = false;
-
-        document.querySelectorAll('#roles input[type="checkbox"]').forEach((c) => (c.checked = false));
+        limpiarCampos();
       }
 
+      function editarHospital() {
+        const hFields = ["entidad", "unidad", "cve", "search-unidad"];
+        hFields.forEach(id => {
+          const el = document.getElementById(id);
+          if(el) el.disabled = false;
+        });
+        isHospitalConfirmed = false;
+        document.getElementById("btn-confirm-hospital").style.display = "block";
+        document.getElementById("btn-edit-hospital").style.display = "none";
+
+        // Deshabilitar pestañas de registro hasta confirmar de nuevo
+        document.querySelectorAll(".tab-btn").forEach((b, i) => {
+          if (i > 0) b.disabled = true;
+        });
+
+        switchView("hospital");
+      }
+
+      function procesarExcelCarga(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        alert(`Función para procesar ${file.name} lista. \n(Requiere lógica de conversión a JSON similar a FORMATO.html)`);
+        
+        // Ejemplo de cómo podrías integrar la carga si XLSX está disponible:
+        /*
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            // ... lógica para mapear a registrosHO o registrosAdmin
+        };
+        reader.readAsArrayBuffer(file);
+        */
+      }
+
+      // Global variable to store confirmed hospital data
+      let currentHospitalData = {
+          entidad: "",
+          municipio: "",
+          nombreUnidad: "",
+          clues: "",
+          cve: ""
+      };
+
       function limpiarCampos() {
+        document.querySelectorAll(".error-msg").forEach(el => {
+          el.textContent = "";
+          el.style.display = "none";
+        });
+        document.querySelectorAll(".form-control").forEach(el => el.style.borderColor = "");
+
         if(document.getElementById("search-unidad")) document.getElementById("search-unidad").value = "";
         if(document.getElementById("search-especialidad")) document.getElementById("search-especialidad").value = "";
         actualizarUnidades();
@@ -8144,12 +8748,21 @@
             else el.value = "";
           }
         });
-        document
-          .querySelectorAll('#roles input[type="checkbox"], #horarios input[type="checkbox"], #titular')
+
+        // Limpiar checkboxes generales excepto los que deben persistir
+        document.querySelectorAll('#roles input[type="checkbox"], #horarios input[type="checkbox"]')
           .forEach((c) => (c.checked = false));
-        
-        document.getElementById("cita-2-container").style.display = "none";
-        document.getElementById("btn-cita2-icon").textContent = "+";
+
+        if (tipo === "operativo") {
+          // Mantener visible el flujo operativo completo
+          document.getElementById("cita-2-container").style.display = "block";
+          document.getElementById("btn-toggle-cita2").style.display = "none";
+          document.getElementById("titular").checked = true;
+        } else {
+          document.getElementById("cita-2-container").style.display = "none";
+          document.getElementById("btn-toggle-cita2").style.display = "block";
+          document.getElementById("titular").checked = false;
+        }
       }
 
       function descargar() {
@@ -8157,86 +8770,174 @@
           alert("No hay datos para descargar");
           return;
         }
+        if (!currentHospitalData.entidad || !currentHospitalData.municipio || !currentHospitalData.nombreUnidad) {
+            alert("Por favor, primero seleccione y confirme los datos del Hospital en la pestaña 'Hospital'.");
+            return;
+        }
 
-        const entidad = get("entidad");
-        const unitVal = get("unidad");
-        const hObj = HOSPITAL_DATA.find(x => x.CLUES === unitVal) || {};
-        const nombreHosp = hObj["NOMBRE DE LA UNIDAD"] || "Hospital";
+        const headersHO = ["Entidad Federativa", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Médica", "Especialidad", "Nomenclatura", "Nombre Consultorio", "TITULAR", "Consul_Virtual", "Turno", "Clave Empleado", "NOMBRE", "APELLIDO", "SEGUNDO APELLIDO", "HORA_INICIO_ATENCION", "HORA_FIN_ATENCION", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+        const headersAdmin = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Clave Empleado", "Matrícula", "Nombre", "Apellido", "2do Apellido", "CURP", "Titular", "Asistente medica", "Administrador de catalogo", "Director", "Jefe de servicios", "Agenda de citas"];
 
-        const wb = XLSX.utils.book_new();
+        const escape = (str) => String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&apos;"}[m]));
 
-        const headersHO = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Especialidad", "Nomenclatura Consultorio", "Nombre del Consultorio", "Turno", "Clave Empleado", "NOMBRE", "APELLIDO PATERNO", "APELLIDO MATERNO", "TITULAR", "HORA_INICIO_ATENCION", "HORA_FIN_ATENCION", "CITA1_INI", "CITA1_FIN", "CITA1_INT", "CITA1_OCASION", "CITA2_INI", "CITA2_FIN", "CITA2_INT", "CITA2_OCASION", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO", "TIPO_CONSULTORIO"];
-        const wsHO = XLSX.utils.aoa_to_sheet([headersHO, ...registrosHO]);
-        XLSX.utils.book_append_sheet(wb, wsHO, "Operativo");
+        const createRow = (row) => `<Row>${row.map(cell => `<Cell><Data ss:Type="String">${escape(cell || '')}</Data></Cell>`).join('')}</Row>`;
 
-        const headersAdmin = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Clave Empleado", "Nombre", "Apellido", "2do Apellido", "CURP", "Titular", "Asistente medica", "Administrador de catalogo", "Director", "Jefe de servicios", "Agenda de citas"];
-        const wsAdmin = XLSX.utils.aoa_to_sheet([headersAdmin, ...registrosAdmin]);
-        XLSX.utils.book_append_sheet(wb, wsAdmin, "Administrativo");
+        let xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Operativo">
+    <Table>
+      ${createRow(headersHO)}
+      ${registrosHO.map(row => row.slice(0, 23)).map(createRow).join('')}
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Administrativo">
+    <Table>
+      ${createRow(headersAdmin)}
+      ${registrosAdmin.map(createRow).join('')}
+    </Table>
+  </Worksheet>
+</Workbook>`;
 
-        XLSX.writeFile(wb, `${entidad} - ${nombreHosp}.xlsx`);
+        const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Construcción de nombre: Filtra vacíos y une con un solo _
+        const fileName = [currentHospitalData.entidad, currentHospitalData.municipio, currentHospitalData.nombreUnidad, "Precarga MoCE"]
+          .filter(part => part && part.toString().trim() !== "")
+          .map(part => part.toString().trim().replace(/\s+/g, '_'))
+          .join('_')
+          .replace(/_+/g, '_'); // Colapsa múltiples _ en uno solo
+
+        a.download = `${fileName}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
 
       function renderTabla() {
         const container = document.getElementById("tabla-registros-container");
-        const data = (tipo === "administrativo") ? registrosAdmin : registrosHO;
+        const sourceData = (tipo === "administrativo") ? registrosAdmin : registrosHO;
         const esAdmin = (tipo === "administrativo");
         
-        if (data.length === 0) {
-          container.innerHTML = "<p style='text-align:center; color:#6c757d; margin-top:20px;'>No hay registros guardados.</p>";
-          return;
-        }
+        // 1. Filtrado por búsqueda
+        let filteredData = sourceData.map((row, originalIdx) => ({ row, originalIdx }))
+          .filter(item => {
+            if (!tableSearchQuery) return true;
+            return item.row.some(cell => 
+              String(cell).toLowerCase().includes(tableSearchQuery.toLowerCase())
+            );
+          });
 
-        let html = `<h4 class="mt-4 mb-3">Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}</h4>`;
+        // 2. Cálculos de paginación
+        const totalRows = filteredData.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+        
+        const startIdx = (currentPage - 1) * rowsPerPage;
+        const endIdx = startIdx + rowsPerPage;
+        const paginatedData = filteredData.slice(startIdx, endIdx);
+
+        // 3. Título de la tabla
+        let html = `<h4 class="mb-3">Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}</h4>`;
+        
+        html += `
+          <div class="datatable-controls">
+            <div>
+              Mostrar 
+              <select onchange="rowsPerPage=parseInt(this.value); currentPage=1; renderTabla()" style="padding:4px; border-radius:4px; border:1px solid #ced4da;">
+                <option value="5" ${rowsPerPage===5?'selected':''}>5</option>
+                <option value="10" ${rowsPerPage===10?'selected':''}>10</option>
+                <option value="25" ${rowsPerPage===25?'selected':''}>25</option>
+              </select> registros
+            </div>
+            <input type="text" class="datatable-search" placeholder="Buscar en la tabla..." 
+                   value="${tableSearchQuery}" oninput="tableSearchQuery=this.value; currentPage=1; renderTabla()">
+          </div>
+        `;
+
         html += "<table><thead><tr>";
         let displayHeaders = [];
         if (esAdmin) {
-          displayHeaders = ["Matrícula", "CURP", "Nombre", "Apellido", "Privs", "Acciones"];
+          displayHeaders = ["#", "Matrícula", "CURP", "Nombre", "Apellido", "Privs", "Acciones"];
         } else {
-          displayHeaders = ["Clave", "Matrícula", "Nombre", "Especialidad", "Nomenclatura", "Consultorio", "Turno", "Atención", "Cita 1 (PV)", "Cita 2 (Sub)", "Días", "Acciones"];
+          displayHeaders = ["#", "NOMBRE", "APELLIDO", "SEGUNDO APELLIDO", "Clave", "Especialidad", "Nombre Consultorio", "Turno", "Atención", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO", "Acciones"];
         }
         
         displayHeaders.forEach(h => html += `<th>${h}</th>`);
         html += "</tr></thead><tbody>";
 
-        data.forEach((row, idx) => {
-          let extra = "";
-          if (esAdmin) {
-            let privs = [];
-            if(row[12] === "Sí") privs.push("Asist");
-            if(row[13] === "Sí") privs.push("Admin");
-            if(row[14] === "Sí") privs.push("Dir");
-            if(row[15] === "Sí") privs.push("Jefe");
-            if(row[16] === "Sí") privs.push("Agen");
-            extra = privs.join(",") || "No";
-          } else {
-            // Resumen de días con recuadros rojos (Índices 25-31 en Operativo)
-            const dLetras = ["L", "M", "Mi", "J", "V", "S", "D"];
-            let badges = "";
-            [25, 26, 27, 28, 29, 30, 31].forEach((col, i) => {
-              if(row[col] === "Sí") {
-                badges += `<span class="badge bg-danger" style="margin-right: 2px;">${dLetras[i]}</span>`;
-              }
-            });
-            extra = badges;
-          }
-          
-          const btnHtml = `
-            <td>
-              <button class="btn-sm-action" style="background:#0d6efd" onclick="editarRegistro(${idx})">Editar</button>
-              <button class="btn-sm-action" style="background:#dc3545" onclick="eliminarRegistro(${idx})">Borrar</button>
-            </td>`;
-          
-          if (esAdmin) {
-            html += `<tr><td>${row[6]}</td><td>${row[10]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${extra}</td>${btnHtml}</tr>`;
-          } else {
-            // Operativo: Clave(9), Matrícula(10), Nombre(11), Especialidad(5), Nomenclatura(6), Consultorio(7), Turno(8), Atención(15-16), Cita1(17-18), Cita2(21-23), Días(25-31)
-            const atencion = `${row[15]}-${row[16]}`;
-            const c1 = `${row[17]}-${row[18]} (${row[19]}m)`;
-            const c2 = row[21] ? `${row[21]}-${row[22]} (${row[23]}m)` : "-";
-            html += `<tr><td>${row[9]}</td><td>${row[10]}</td><td>${row[11]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td>${row[8]}</td><td>${atencion}</td><td>${c1}</td><td>${c2}</td><td>${extra}</td>${btnHtml}</tr>`;
-          }
-        });
+        if (paginatedData.length === 0) {
+          html += `<tr><td colspan="${displayHeaders.length}" style="text-align:center; color:#6c757d; padding: 20px;">No hay registros guardados.</td></tr>`;
+        } else {
+          paginatedData.forEach((item, pageIdx) => {
+            const row = item.row;
+            const originalIdx = item.originalIdx;
+            const rowNumber = startIdx + pageIdx + 1;
+
+            let privsHtml = "";
+            if (esAdmin) {
+              let privs = [];
+              if(row[12] === "Sí") privs.push("Asist");
+              if(row[13] === "X") privs.push("Admin");
+              if(row[14] === "X") privs.push("Dir");
+              if(row[15] === "X") privs.push("Jefe");
+              if(row[16] === "X") privs.push("Agen");
+              privsHtml = privs.join(",") || "No";
+            }
+            
+            const btnHtml = `
+              <td>
+                <button class="btn-sm-action" style="background:#0d6efd" onclick="editarRegistro(${originalIdx})">Editar</button>
+                <button class="btn-sm-action" style="background:#dc3545" onclick="eliminarRegistro(${originalIdx})">Borrar</button>
+              </td>`;
+            
+            if (esAdmin) {
+              html += `<tr><td>${rowNumber}</td><td>${row[6] || '-'}</td><td>${row[10] || '-'}</td><td>${row[7]}</td><td>${row[8]}</td><td>${privsHtml}</td>${btnHtml}</tr>`;
+            } else {
+              // Operativo: Formateo visual de horarios
+              const formatDay = (val) => {
+                if (!val) return '-';
+                return val.split(' / ').map(part => {
+                  if (part.startsWith('PV:')) {
+                    return `<div style="background:#cfe2ff; color:#084298; padding:2px 6px; border-radius:4px; margin-bottom:3px; font-size:0.7rem; border:1px solid #b6d4fe; white-space:nowrap;"><b>PV:</b> ${part.replace('PV: ', '')}</div>`;
+                  } else if (part.startsWith('SUB:')) {
+                    return `<div style="background:#d1e7dd; color:#0f5132; padding:2px 6px; border-radius:4px; font-size:0.7rem; border:1px solid #badbcc; white-space:nowrap;"><b>SUB:</b> ${part.replace('SUB: ', '')}</div>`;
+                  }
+                  return part;
+                }).join('');
+              };
+
+              html += `<tr>
+                <td><b>${rowNumber}</b></td>
+                <td>${row[11]}</td><td>${row[12]}</td><td>${row[13]}</td>
+                <td>${row[10]}</td>
+                <td>${row[4]}</td><td>${row[6]}</td><td>${row[9]}</td>
+                <td>${row[14]}-${row[15]}</td>
+                <td>${formatDay(row[16])}</td><td>${formatDay(row[17])}</td>
+                <td>${formatDay(row[18])}</td><td>${formatDay(row[19])}</td>
+                <td>${formatDay(row[20])}</td><td>${formatDay(row[21])}</td>
+                <td>${formatDay(row[22])}</td>
+                ${btnHtml}
+              </tr>`;
+            }
+          });
+        }
         html += "</tbody></table>";
+
+        // 4. Controles de paginación (Footer)
+        if (totalPages > 1) {
+          html += `<div class="pagination-container">`;
+          html += `<button class="page-link" ${currentPage===1?'disabled':''} onclick="currentPage--; renderTabla()">Anterior</button>`;
+          for (let i = 1; i <= totalPages; i++) {
+            html += `<button class="page-link ${i===currentPage?'active':''}" onclick="currentPage=${i}; renderTabla()">${i}</button>`;
+          }
+          html += `<button class="page-link" ${currentPage===totalPages?'disabled':''} onclick="currentPage++; renderTabla()">Siguiente</button>`;
+          html += `</div>`;
+        }
+
         container.innerHTML = html;
       }
     </script>
