@@ -501,6 +501,124 @@
       color: red;
       font-size: 0.8rem;
     }
+
+    /* SweetAlert Custom Styles (Flotante y Minimalista) */
+    .swal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(2px);
+      animation: swalFadeIn 0.2s ease-out;
+    }
+
+    .swal-modal {
+      background: #fff;
+      width: 90%;
+      max-width: 320px;
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      animation: swalPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .swal-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 15px;
+      display: block;
+    }
+
+    .swal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .swal-text {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+
+    .swal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .swal-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      min-width: 100px;
+    }
+
+    .swal-btn-confirm {
+      background: var(--bs-primary);
+      color: #fff;
+    }
+
+    .swal-btn-cancel {
+      background: #f1f3f5;
+      color: #495057;
+    }
+
+    .swal-btn:hover {
+      filter: brightness(0.9);
+      transform: translateY(-1px);
+    }
+
+    @keyframes swalFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes swalPop {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .icon-success {
+      fill: #40c057;
+    }
+
+    .icon-error {
+      fill: #fa5252;
+    }
+
+    .icon-warning {
+      fill: #fab005;
+    }
+
+    .icon-info {
+      fill: #228be6;
+    }
   </style>
 </head>
 
@@ -621,8 +739,28 @@
           </svg>
           Cargar EXCEL
         </button>
+        <button class="btn btn-secondary" style="width: auto; background-color: #6f42c1; border-color: #6f42c1;"
+          onclick="agregarRegistroDemo()">
+          🎁 Demo Random
+        </button>
         <input type="file" id="excel-input" style="display: none;" accept=".xlsx, .xls"
           onchange="procesarExcelCarga(this)">
+      </div>
+
+      <!-- Buscador y Controles de Tabla (Persistentes para evitar pérdida de foco) -->
+      <div id="table-controls" class="datatable-controls"
+        style="display: none; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--bs-border-color); margin-bottom: 1rem;">
+        <div>
+          Mostrar
+          <select id="rowsPerPageSelect" onchange="rowsPerPage=parseInt(this.value); currentPage=1; renderTabla()"
+            style="padding:4px; border-radius:4px; border:1px solid #ced4da; cursor:pointer;">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+          </select> registros
+        </div>
+        <input type="text" id="globalSearchInput" class="datatable-search" placeholder="Buscar en la tabla..."
+          oninput="tableSearchQuery=this.value; currentPage=1; renderTabla()">
       </div>
 
       <div class="table-responsive" id="tabla-registros-container"></div>
@@ -756,7 +894,7 @@
           </fieldset>
 
           <fieldset class="mt-4">
-            <legend>Horario Primera vez (*)</legend>
+            <legend>Horario Citas Primera vez</legend>
             <div class="row align-items-end">
               <div class="col-3">
                 <label class="form-label">Intervalo (min) *</label>
@@ -780,7 +918,7 @@
               </div>
             </div>
             <div class="mt-3">
-              <label class="form-label">Días de Atención (Primera vez):</label>
+              <label class="form-label">Días de Atención (Citas Primera vez):</label>
               <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <label class="form-check-label"><input type="checkbox" id="lunes1" class="form-check-input"> L</label>
                 <label class="form-check-label"><input type="checkbox" id="martes1" class="form-check-input"> M</label>
@@ -795,14 +933,14 @@
             <div class="mt-2">
               <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCita2()"
                 style="border-radius: 4px; padding: 2px 10px;" id="btn-toggle-cita2">
-                <span id="btn-cita2-icon">+</span> Agregar Horario Subsecuente
+                <span id="btn-cita2-icon">+</span> Agregar Horario Citas Subsecuente
               </button>
             </div>
           </fieldset>
 
           <div id="cita-2-container" style="display: none;">
             <fieldset class="mt-4" style="background-color: #fcfcfc;">
-              <legend>Horario Subsecuente (*)</legend>
+              <legend>Horario Citas Subsecuente</legend>
               <div class="row align-items-end">
                 <div class="col-3">
                   <label class="form-label">Intervalo Subsecuente (min)</label>
@@ -826,7 +964,7 @@
                 </div>
               </div>
               <div class="mt-3">
-                <label class="form-label">Días de Atención (Subsecuente):</label>
+                <label class="form-label">Días de Atención (Citas Subsecuente):</label>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                   <label class="form-check-label"><input type="checkbox" id="lunes2" class="form-check-input"> L</label>
                   <label class="form-check-label"><input type="checkbox" id="martes2" class="form-check-input">
@@ -926,13 +1064,13 @@
 
           let iconMarkup = '';
           if (options.icon === 'success') {
-            iconMarkup = `<svg class="swal-icon icon-success" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+            iconMarkup = `<svg class="swal-icon icon-success" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
           } else if (options.icon === 'error') {
-            iconMarkup = `<svg class="swal-icon icon-error" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>`;
+            iconMarkup = `<svg class="swal-icon icon-error" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>`;
           } else if (options.icon === 'warning') {
             iconMarkup = `<svg class="swal-icon icon-warning" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`;
           } else {
-            iconMarkup = `<svg class="swal-icon icon-info" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+            iconMarkup = `<svg class="swal-icon icon-info" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
           }
 
           overlay.innerHTML = `
@@ -967,6 +1105,7 @@
     let registrosAdmin = [];
     let editIndex = -1; // Índice para saber si estamos editando
     let tipo = "operativo";
+    let lastAddedRef = null; // Referencia para resaltar el último registro
 
     // Variables para paginación y búsqueda
     let currentPage = 1;
@@ -974,6 +1113,8 @@
     let tableSearchQuery = "";
     let formVisible = false;
     let isHospitalConfirmed = false;
+    let currentSortCol = null;
+    let currentSortDir = 'asc';
 
     // Asegúrate de tener este Set definido fuera de la función
     const ESTADOS_CURP = new Set([
@@ -8236,11 +8377,21 @@
       document.getElementById("btn-save-admin").textContent = isEditing ? "Actualizar Registro Administrativo" : "Guardar Personal Administrativo";
     }
 
-    function eliminarRegistro(idx) {
-      if (confirm("¿Seguro que deseas eliminar este registro?")) {
+    async function eliminarRegistro(idx) {
+      const confirmed = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Este registro se eliminará permanentemente.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, borrar",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (confirmed) {
         if (tipo === "operativo") registrosHO.splice(idx, 1);
         else registrosAdmin.splice(idx, 1);
         renderTabla();
+        Swal.fire({ title: "Borrado", text: "El registro ha sido eliminado.", icon: "success" });
       }
     }
 
@@ -8442,6 +8593,10 @@
       currentPage = 1;
       tableSearchQuery = "";
 
+      // Ordenar por nombre por defecto al cambiar de vista
+      currentSortCol = (v === 'administrativo') ? 7 : 11;
+      currentSortDir = 'asc';
+
       if (v === "hospital") {
         tipo = "hospital";
         document
@@ -8465,6 +8620,7 @@
 
       // Mostrar botones de acción si no estamos en la pestaña Hospital
       document.getElementById("registro-actions").style.display = (v === 'hospital') ? "none" : "flex";
+      document.getElementById("table-controls").style.display = (v === 'hospital') ? "none" : "flex";
       document.getElementById("btn-cargar-excel").style.display = isOp ? "flex" : "none";
 
       document.getElementById("field-titular").style.display = isOp
@@ -8526,7 +8682,11 @@
     function guardar() {
       // 0. Validar que exista un hospital confirmado
       if (!currentHospitalData || !currentHospitalData.clues) {
-        alert("⚠️ No se puede guardar el registro: Primero debes definir y confirmar un Hospital en la pestaña 'Hospital'.");
+        Swal.fire({
+          title: "Configuración incompleta",
+          text: "Primero debes definir y confirmar un Hospital en la pestaña correspondiente.",
+          icon: "warning"
+        });
         switchView('hospital');
         return;
       }
@@ -8553,13 +8713,13 @@
       });
 
       if (!valid) {
-        alert("Por favor, completa los campos marcados en rojo.");
+        Swal.fire({ title: "Campos vacíos", text: "Por favor, completa los campos marcados en rojo.", icon: "error" });
         return;
       }
 
       // Ejecutar validaciones de CURP
       if (!validarCURPs()) {
-        alert("Hay errores en el formato de la CURP. Revisa los mensajes en rojo.");
+        Swal.fire({ title: "Error en CURP", text: "El formato de la CURP no es válido. Revisa los mensajes en rojo.", icon: "error" });
         return;
       }
 
@@ -8605,11 +8765,11 @@
 
         // Validar integridad de tiempos si la sección está seleccionada
         if (hasPV && (!get("h_ini_cita") || !get("h_fin_cita"))) {
-          Swal.fire({ title: "Horario PV", text: "Complete el rango de horas para el Horario Primera vez.", icon: "warning" });
+          Swal.fire({ title: "Horario PV", text: "Complete el rango de horas para el Horario Citas Primera vez.", icon: "warning" });
           return;
         }
         if (hasSUB && (!get("h_ini_cita2") || !get("h_fin_cita2"))) {
-          Swal.fire({ title: "Horario Subsecuente", text: "Complete el rango de horas para el Horario Subsecuente.", icon: "warning" });
+          Swal.fire({ title: "Horario Subsecuente", text: "Complete el rango de horas para el Horario Citas Subsecuente.", icon: "warning" });
           return;
         }
 
@@ -8626,7 +8786,7 @@
             const end2 = timeToMinutes(get("h_fin_cita2"));
 
             if (start1 < end2 && start2 < end1) {
-              Swal.fire({ title: "Traslape", text: "Los horarios de 'Primera vez' y 'Subsecuente' se empalman.", icon: "error" });
+              Swal.fire({ title: "Traslape", text: "Los horarios de 'Citas Primera vez' y 'Citas Subsecuente' se empalman.", icon: "error" });
               return;
             }
           }
@@ -8662,9 +8822,11 @@
 
         if (editIndex > -1) {
           registrosAdmin[editIndex] = fila;
+          lastAddedRef = null;
           Swal.fire({ title: "Éxito", text: "Registro administrativo actualizado", icon: "success" });
         } else {
           registrosAdmin.push(fila);
+          lastAddedRef = fila;
           Swal.fire({ title: "Éxito", text: "Registro administrativo guardado", icon: "success" });
         }
       } else {
@@ -8711,9 +8873,11 @@
 
         if (editIndex > -1) {
           registrosHO[editIndex] = fila;
+          lastAddedRef = null;
           Swal.fire({ title: "Éxito", text: "Registro operativo actualizado", icon: "success" });
         } else {
           registrosHO.push(fila);
+          lastAddedRef = fila;
           Swal.fire({ title: "Éxito", text: "Registro operativo guardado", icon: "success" });
         }
       }
@@ -8777,6 +8941,8 @@
       // Redirigir a la pestaña Operativo automáticamente
       switchView("operativo");
 
+      Swal.fire({ title: "Hospital Confirmado", text: "Ya puedes comenzar el registro de personal.", icon: "success" });
+
       limpiarCampos();
     }
 
@@ -8801,18 +8967,62 @@
     function procesarExcelCarga(input) {
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
-      alert(`Función para procesar ${file.name} lista. \n(Requiere lógica de conversión a JSON similar a FORMATO.html)`);
+      Swal.fire({
+        title: "Carga de Excel",
+        text: `Archivo "${file.name}" cargado. La integración con el procesamiento de datos está lista.`,
+        icon: "info"
+      });
+    }
 
-      // Ejemplo de cómo podrías integrar la carga si XLSX está disponible:
-      /*
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, {type: 'array'});
-          // ... lógica para mapear a registrosHO o registrosAdmin
-      };
-      reader.readAsArrayBuffer(file);
-      */
+    function agregarRegistroDemo() {
+      if (!isHospitalConfirmed) {
+        Swal.fire({ title: "Atención", text: "Confirme los datos del hospital primero.", icon: "warning" });
+        return;
+      }
+
+      const nombres = ["JUAN DEMO", "MARIA DEMO", "PEDRO DEMO", "ANA DEMO", "ROBERTO DEMO", "DIANA DEMO"];
+      const apellidos = ["PÉREZ", "GARCÍA", "LÓPEZ", "MARTÍNEZ", "RODRÍGUEZ", "SÁNCHEZ"];
+      const curps = ["ABCD123456HDFRRS01", "EFGH987654MDFLLN02", "IJKL112233HDFYYA03", "MNOP445566MDFZZB04"];
+
+      const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      if (tipo === "operativo") {
+        const esp = rand(SPECIALTY_DATA.map(x => x["Descripción Especialidad / Subespecialidad"]));
+        const curp = rand(curps);
+        const fila = [
+          currentHospitalData.entidad,            // 0
+          currentHospitalData.cve,                // 1
+          currentHospitalData.clues,              // 2
+          currentHospitalData.nombreUnidad,       // 3
+          esp,                                    // 4
+          "DEMO_NOM_01",                          // 5: Nomenclatura
+          esp.substring(0, 30).toUpperCase(),     // 6: Nombre Consultorio
+          "X",                                    // 7: TITULAR
+          "NO",                                   // 8: Consul_Virtual
+          rand(["MATUTINO", "VESPERTINO"]),       // 9: Turno
+          "",                                     // 10
+          rand(nombres),                          // 11
+          rand(apellidos),                        // 12
+          rand(apellidos),                        // 13
+          "08:00",                                // 14: h_ini_at
+          "14:00",                                // 15: h_fin_at
+          "PV: 08:00-14:00 (20m) / SUB: 10:00-12:00 (15m)", "PV: 08:00-14:00 (20m)", "PV: 08:00-14:00 (20m)", "PV: 08:00-14:00 (20m)", "PV: 08:00-14:00 (20m)", "-", "-", // 16-22
+          "08:00", "14:00", "20",                 // 23,24,25
+          "10:00", "12:00", "15",                 // 26,27,28
+          curp,                                   // 29
+          [true, true, true, true, true, false, false], // 30: Días PV (L-V)
+          [true, false, false, false, false, false, false] // 31: Días SUB (L)
+        ];
+        registrosHO.push(fila);
+      } else {
+        const curp = rand(curps);
+        const fila = [currentHospitalData.entidad, currentHospitalData.municipio, currentHospitalData.cve, currentHospitalData.clues, currentHospitalData.nombreUnidad, "", "M" + Math.floor(Math.random() * 10000), rand(nombres), rand(apellidos), rand(apellidos), curp, "", "X", "", "", "X", ""];
+        registrosAdmin.push(fila);
+      }
+
+      lastAddedRef = fila;
+      renderTabla();
+      Swal.fire({ title: "Demo", text: "Registro demo agregado con éxito.", icon: "success" });
     }
 
     // Global variable to store confirmed hospital data
@@ -8892,19 +9102,47 @@
         return;
       }
 
-      const headersHO = ["Entidad Federativa", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Médica", "Especialidad", "Nomenclatura", "Nombre Consultorio", "TITULAR", "Consul_Virtual", "Turno", "Clave Empleado", "NOMBRE", "APELLIDO", "SEGUNDO APELLIDO", "HORA_INICIO_ATENCION", "HORA_FIN_ATENCION", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+      const headersHO = ["CURP", "Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Médica", "NOMBRE", "APELLIDO PATERNO", "APELLIDO MATERNO", "Especialidad", "Nombre Consultorio", "TITULAR", "HORA_ATENCION", "Turno", "PRIMERA VEZ", "SUBSECUENTE"];
       const headersAdmin = ["Entidad Federativa", "Municipio", "CVE_PRESUPUESTAL", "CLUES", "Nombre Unidad Medica", "Clave Empleado", "Matrícula", "Nombre", "Apellido", "2do Apellido", "CURP", "Titular", "Asistente medica", "Administrador de catalogo", "Director", "Jefe de servicios", "Agenda de citas"];
 
       const escape = (str) => String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&apos;" }[m]));
-
       const createRow = (row) => `<Row>${row.map(cell => `<Cell><Data ss:Type="String">${escape(cell || '')}</Data></Cell>`).join('')}</Row>`;
+
+      const dayLetters = ["L", "M", "Mi", "J", "V", "S", "D"];
+      const formatH = (ini, fin, dur, days) => {
+        if (!ini || !fin || !days || !days.some(d => d)) return "";
+        const dStr = dayLetters.filter((_, i) => days[i]).join(" ");
+        return `${ini} - ${fin} (${dur}) - ${dStr}`;
+      };
+
+      const rowsHOXml = registrosHO.map(row => {
+        const newRow = [
+          row[29],                                // CURP
+          row[0],                                 // Entidad
+          currentHospitalData.municipio,          // Municipio (Global)
+          row[1],                                 // CVE
+          row[2],                                 // CLUES
+          row[3],                                 // Unidad
+          row[11],                                // NOMBRE
+          row[12],                                // PATERNO
+          row[13],                                // MATERNO
+          row[4],                                 // Especialidad
+          row[6],                                 // Consultorio
+          row[7] === 'X' ? 'SÍ' : 'NO',           // TITULAR
+          `${row[14]} - ${row[15]}`,              // HORA_ATENCION
+          row[9],                                 // Turno
+          formatH(row[23], row[24], row[25], row[30]), // PV
+          formatH(row[26], row[27], row[28], row[31])  // SUB
+        ];
+        return createRow(newRow);
+      }).join('');
 
       let xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
   <Worksheet ss:Name="Operativo">
     <Table>
       ${createRow(headersHO)}
-      ${registrosHO.map(row => row.slice(0, 23)).map(createRow).join('')}
+      ${rowsHOXml}
     </Table>
   </Worksheet>
   <Worksheet ss:Name="Administrativo">
@@ -8934,13 +9172,32 @@
       URL.revokeObjectURL(url);
     }
 
+    function handleHeaderClick(dataIdx) {
+      if (currentSortCol === dataIdx) {
+        currentSortDir = (currentSortDir === 'asc') ? 'desc' : 'asc';
+      } else {
+        currentSortCol = dataIdx;
+        currentSortDir = 'asc';
+      }
+      renderTabla();
+    }
+
     function renderTabla() {
       const container = document.getElementById("tabla-registros-container");
       const sourceData = (tipo === "administrativo") ? registrosAdmin : registrosHO;
       const esAdmin = (tipo === "administrativo");
 
-      // 1. Filtrado por búsqueda
-      let filteredData = sourceData.map((row, originalIdx) => ({ row, originalIdx }))
+      // Mapeo de índices de columnas para ordenamiento
+      // Operativo: CURP(29), NOMBRE(11), PATERNO(12), MATERNO(13), Esp(4), Cons(6), Tit(7), Atenc(14), Turno(9), PV(23), SUB(26)
+      // Admin: Matr(6), CURP(10), Nombre(7), Apellido(8)
+      const opColMap = [null, 29, 11, 12, 13, 4, 6, 7, 14, 9, 23, 26];
+      const adminColMap = [null, 6, 10, 7, 8];
+
+      // 1. Preparar datos con índices originales
+      let processedData = sourceData.map((row, originalIdx) => ({ row, originalIdx }));
+
+      // 2. Filtrado por búsqueda
+      processedData = processedData
         .filter(item => {
           if (!tableSearchQuery) return true;
           return item.row.some(cell =>
@@ -8948,42 +9205,48 @@
           );
         });
 
-      // 2. Cálculos de paginación
-      const totalRows = filteredData.length;
+      // 3. Ordenamiento
+      if (currentSortCol !== null) {
+        processedData.sort((a, b) => {
+          let valA = String(a.row[currentSortCol] || "").toLowerCase();
+          let valB = String(b.row[currentSortCol] || "").toLowerCase();
+
+          if (currentSortDir === 'asc') return valA.localeCompare(valB, 'es');
+          return valB.localeCompare(valA, 'es');
+        });
+      }
+
+      // 4. Cálculos de paginación
+      const totalRows = processedData.length;
       const totalPages = Math.ceil(totalRows / rowsPerPage);
       if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
 
       const startIdx = (currentPage - 1) * rowsPerPage;
       const endIdx = startIdx + rowsPerPage;
-      const paginatedData = filteredData.slice(startIdx, endIdx);
+      const paginatedData = processedData.slice(startIdx, endIdx);
 
-      // 3. Título de la tabla
+      // 5. Título de la tabla
       let html = `<h4 class="mb-3">Registros ${tipo === 'operativo' ? 'Operativos' : 'Administrativos'}</h4>`;
-
-      html += `
-          <div class="datatable-controls">
-            <div>
-              Mostrar 
-              <select onchange="rowsPerPage=parseInt(this.value); currentPage=1; renderTabla()" style="padding:4px; border-radius:4px; border:1px solid #ced4da;">
-                <option value="5" ${rowsPerPage === 5 ? 'selected' : ''}>5</option>
-                <option value="10" ${rowsPerPage === 10 ? 'selected' : ''}>10</option>
-                <option value="25" ${rowsPerPage === 25 ? 'selected' : ''}>25</option>
-              </select> registros
-            </div>
-            <input type="text" class="datatable-search" placeholder="Buscar en la tabla..." 
-                   value="${tableSearchQuery}" oninput="tableSearchQuery=this.value; currentPage=1; renderTabla()">
-          </div>
-        `;
 
       html += "<table><thead><tr>";
       let displayHeaders = [];
       if (esAdmin) {
         displayHeaders = ["#", "Matrícula", "CURP", "Nombre", "Apellido", "Privs", "Acciones"];
       } else {
-        displayHeaders = ["#", "NOMBRE", "APELLIDO", "SEGUNDO APELLIDO", "Clave", "Especialidad", "Nombre Consultorio", "Turno", "Atención", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO", "Acciones"];
+        displayHeaders = ["#", "CURP", "NOMBRE", "APELLIDO PATERNO", "APELLIDO MATERNO", "Especialidad", "Nombre Consultorio", "TITULAR", "HORA ATENCIÓN", "Turno", "PRIMERA VEZ", "SUBSECUENTE", "Acciones"];
       }
 
-      displayHeaders.forEach(h => html += `<th>${h}</th>`);
+      displayHeaders.forEach((h, i) => {
+        const map = esAdmin ? adminColMap : opColMap;
+        const dataIdx = map[i];
+        if (dataIdx !== null && dataIdx !== undefined) {
+          const arrow = (currentSortCol === dataIdx) ? (currentSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+          html += `<th onclick="handleHeaderClick(${dataIdx})" style="cursor:pointer; user-select:none; white-space:nowrap;">${h}${arrow}</th>`;
+        } else {
+          html += `<th>${h}</th>`;
+        }
+      });
+
       html += "</tr></thead><tbody>";
 
       if (paginatedData.length === 0) {
@@ -8993,6 +9256,7 @@
           const row = item.row;
           const originalIdx = item.originalIdx;
           const rowNumber = startIdx + pageIdx + 1;
+          const rowStyle = (row === lastAddedRef) ? 'style="background-color: #d4edda;"' : '';
 
           let privsHtml = "";
           if (esAdmin) {
@@ -9012,31 +9276,34 @@
               </td>`;
 
           if (esAdmin) {
-            html += `<tr><td>${rowNumber}</td><td>${row[6] || '-'}</td><td>${row[10] || '-'}</td><td>${row[7]}</td><td>${row[8]}</td><td>${privsHtml}</td>${btnHtml}</tr>`;
+            html += `<tr ${rowStyle}><td>${rowNumber}</td><td>${row[6] || '-'}</td><td>${row[10] || '-'}</td><td>${row[7]}</td><td>${row[8]}</td><td>${privsHtml}</td>${btnHtml}</tr>`;
           } else {
             // Operativo: Formateo visual de horarios
-            const formatDay = (val) => {
-              if (!val) return '-';
-              return val.split(' / ').map(part => {
-                if (part.startsWith('PV:')) {
-                  return `<div style="background:#cfe2ff; color:#084298; padding:2px 6px; border-radius:4px; margin-bottom:3px; font-size:0.7rem; border:1px solid #b6d4fe; white-space:nowrap;"><b>PV:</b> ${part.replace('PV: ', '')}</div>`;
-                } else if (part.startsWith('SUB:')) {
-                  return `<div style="background:#d1e7dd; color:#0f5132; padding:2px 6px; border-radius:4px; font-size:0.7rem; border:1px solid #badbcc; white-space:nowrap;"><b>SUB:</b> ${part.replace('SUB: ', '')}</div>`;
-                }
-                return part;
-              }).join('');
+            const dayLetters = ["L", "M", "Mi", "J", "V", "S", "D"];
+            const formatHCell = (ini, fin, dur, days) => {
+              if (!ini || !fin || !days || !days.some(d => d)) return '-';
+              const dStr = dayLetters.filter((_, i) => days[i]).join(" ");
+              return `<div style="font-size:0.8rem; line-height: 1.2;">
+                <div style="white-space:nowrap;">${ini} - ${fin} <b>(${dur}m)</b></div>
+                <div style="background-color: #198754; color: white; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; font-size: 0.7rem; font-weight: bold; letter-spacing: 0.5px;">
+                  ${dStr}
+                </div>
+              </div>`;
             };
 
-            html += `<tr>
+            html += `<tr ${rowStyle}>
                 <td><b>${rowNumber}</b></td>
-                <td>${row[11]}</td><td>${row[12]}</td><td>${row[13]}</td>
-                <td>${row[10]}</td>
-                <td>${row[4]}</td><td>${row[6]}</td><td>${row[9]}</td>
-                <td>${row[14]}-${row[15]}</td>
-                <td>${formatDay(row[16])}</td><td>${formatDay(row[17])}</td>
-                <td>${formatDay(row[18])}</td><td>${formatDay(row[19])}</td>
-                <td>${formatDay(row[20])}</td><td>${formatDay(row[21])}</td>
-                <td>${formatDay(row[22])}</td>
+                <td>${row[29] || '-'}</td>
+                <td>${row[11]}</td>
+                <td>${row[12]}</td>
+                <td>${row[13]}</td>
+                <td>${row[4]}</td>
+                <td>${row[6]}</td>
+                <td>${row[7] === 'X' ? 'SÍ' : 'NO'}</td>
+                <td>${row[14]} - ${row[15]}</td>
+                <td>${row[9]}</td>
+                <td>${formatHCell(row[23], row[24], row[25], row[30])}</td>
+                <td>${formatHCell(row[26], row[27], row[28], row[31])}</td>
                 ${btnHtml}
               </tr>`;
           }
